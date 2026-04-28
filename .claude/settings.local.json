@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(shasum -a 256)",
+      "Bash(awk '{print $1}')",
+      "Bash(open /Users/pb/Documents/Kostenrechner/index.html)",
+      "Bash(sips -s format png /Users/pb/Downloads/AC_L_black_cmyk.pdf --out /Users/pb/Documents/Kostenrechner/logo.png)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/pb/Documents/Kostenrechner/logo.png)",
+      "Bash(mkdir -p /tmp/aerocompact_files)",
+      "Bash(unzip -o /Users/pb/Downloads/files.zip -d /tmp/aerocompact_files)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
