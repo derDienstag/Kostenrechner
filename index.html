@@ -4,1417 +4,932 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AEROCOMPACT Richtpreis-Rechner</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- React + ReactDOM -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-  <!-- Babel (für JSX zur Laufzeit) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
   <style>
-    html, body, #root { background-color: #000; }
-    .lucide-icon { display: inline-flex; }
-    .logo-invert { filter: invert(1) brightness(1.1); }
-    /* Pretty scrollbar for textarea */
-    textarea::-webkit-scrollbar { width: 8px; }
-    textarea::-webkit-scrollbar-track { background: #0a0a0a; }
-    textarea::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    :root {
+      /* surfaces */
+      --bg:        oklch(8.5% 0.008 200);
+      --bg2:       oklch(12%  0.008 200);
+      --surface:   oklch(15%  0.008 200);
+      --surface2:  oklch(19%  0.008 200);
+      /* borders */
+      --border:    oklch(22%  0.006 200);
+      --border2:   oklch(32%  0.006 200);
+      /* text */
+      --text:      oklch(92%  0.004 200);
+      --text2:     oklch(62%  0.004 200);
+      --text3:     oklch(40%  0.004 200);
+      /* accent */
+      --cyan:      oklch(78%  0.13  195);
+      --cyan-mid:  oklch(78%  0.13  195 / 0.18);
+      --cyan-dim:  oklch(78%  0.13  195 / 0.09);
+      /* semantic */
+      --amber:     oklch(74%  0.14   72);
+      --amber-dim: oklch(74%  0.14   72 / 0.10);
+      --err:       oklch(65%  0.16   20);
+      --err-dim:   oklch(65%  0.16   20 / 0.10);
+      /* type */
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Space Grotesk', sans-serif;
+      /* geometry */
+      --rad:    10px;
+      --rad-sm:  6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body, #root {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .hdr {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .hdr-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 32px; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── Lang ───────────────────────────────────────────────────── */
+    .lang-btn {
+      padding: 4px 8px; border-radius: 5px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border: 1px solid transparent; cursor: pointer;
+      background: transparent; font-family: var(--sans);
+      color: var(--text3); transition: all 0.12s;
+    }
+    .lang-btn:hover { color: var(--text); border-color: var(--border); }
+    .lang-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rad);
+    }
+
+    /* ── Section header ─────────────────────────────────────────── */
+    .sec-hdr {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--text3);
+    }
+
+    /* ── Category tabs ──────────────────────────────────────────── */
+    .cat-tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--rad-sm);
+      overflow: hidden;
+      background: var(--bg2);
+      margin-bottom: 20px;
+    }
+    .cat-tab {
+      flex: 1; padding: 9px 6px;
+      border: none; background: transparent;
+      font-family: var(--sans);
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+      text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      border-right: 1px solid var(--border);
+    }
+    .cat-tab:last-child { border-right: none; }
+    .cat-tab:hover:not(.cat-tab-active) { background: var(--surface); }
+    .cat-tab-active { background: var(--surface); }
+    .cat-tab-name {
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+      color: var(--text2);
+    }
+    .cat-tab-active .cat-tab-name { color: var(--cyan); }
+    .cat-tab-sub { font-size: 10px; color: var(--text3); white-space: nowrap; }
+    .cat-req-dot {
+      display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+      background: var(--amber); margin-left: 4px;
+      vertical-align: middle; position: relative; top: -1px;
+    }
+
+    /* ── Chips ──────────────────────────────────────────────────── */
+    .chip {
+      padding: 5px 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--rad-sm);
+      background: transparent; color: var(--text2);
+      font-family: var(--sans); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+    .chip.active { border-color: var(--cyan); background: var(--cyan-dim); color: var(--cyan); font-weight: 600; }
+    .chip:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── Inputs ─────────────────────────────────────────────────── */
+    .inp {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 9px 12px;
+      color: var(--text); font-family: var(--sans); font-size: 13px;
+      width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
+    select.inp { cursor: pointer; }
+    select.inp option { background: oklch(12% 0.008 200); }
+
+    .num-inp {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 9px 12px;
+      color: var(--text); font-family: var(--mono); font-size: 14px;
+      width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-align: right; font-variant-numeric: tabular-nums;
+    }
+    .num-inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
+
+    /* ── Segmented ──────────────────────────────────────────────── */
+    .seg {
+      display: flex; border: 1px solid var(--border);
+      border-radius: var(--rad-sm); overflow: hidden; background: var(--bg2);
+    }
+    .seg-btn {
+      flex: 1; padding: 8px 10px; border: none; background: transparent;
+      color: var(--text2); font-family: var(--sans);
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+    .seg-btn:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+    .seg-btn.active { background: var(--surface2); color: var(--text); }
+    .seg-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    /* ── Slider ─────────────────────────────────────────────────── */
+    .slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 3px; border-radius: 2px;
+      outline: none; cursor: pointer;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--cyan);
+      cursor: pointer; transition: transform 0.12s;
+    }
+    .slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .slider::-webkit-slider-thumb:active { transform: scale(1.05); }
+    .slider::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--cyan); cursor: pointer;
+    }
+
+    /* ── Toggle ─────────────────────────────────────────────────── */
+    .toggle-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--rad-sm); cursor: pointer; transition: all 0.15s;
+      background: transparent;
+    }
+    .toggle-wrap:hover { border-color: var(--border2); }
+    .toggle-wrap.on { border-color: oklch(78% 0.13 195 / 0.4); background: var(--cyan-dim); }
+    .toggle-track {
+      width: 34px; height: 18px; border-radius: 9px;
+      transition: background 0.15s; position: relative; flex-shrink: 0;
+    }
+    .toggle-thumb {
+      position: absolute; top: 2px; width: 14px; height: 14px;
+      border-radius: 50%; transition: left 0.15s;
+    }
+
+    /* ── Label ──────────────────────────────────────────────────── */
+    .lbl {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3);
+    }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 8px; border-radius: 4px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .badge-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid oklch(74% 0.14 72 / 0.25); }
+    .badge-ok   { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid oklch(78% 0.13 195 / 0.2); }
+    .badge-err  { background: var(--err-dim);   color: var(--err);   border: 1px solid oklch(65% 0.16 20 / 0.25); }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 13px; border-radius: var(--rad-sm);
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      cursor: pointer; transition: all 0.12s; border: 1px solid transparent;
+    }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--text2); }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+    .btn-primary { background: var(--cyan); color: oklch(12% 0.008 200); border-color: var(--cyan); }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-danger { background: transparent; border-color: oklch(65% 0.16 20 / 0.3); color: var(--err); }
+    .btn-danger:hover { background: var(--err-dim); }
+
+    /* ── Breakdown rows ─────────────────────────────────────────── */
+    .bk-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; font-size: 11px; font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .bk-row + .bk-row { border-top: 1px solid var(--border); }
+
+    /* ── Textarea ───────────────────────────────────────────────── */
+    textarea {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 11px 12px;
+      color: var(--text); font-family: var(--mono); font-size: 11px;
+      width: 100%; outline: none; resize: none;
+      transition: border-color 0.15s; line-height: 1.6;
+    }
+    textarea:focus { border-color: var(--cyan); }
+    textarea::-webkit-scrollbar { width: 5px; }
+    textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── Icon helper ────────────────────────────────────────────── */
+    .ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ── Animations ─────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.22s ease forwards; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      .main-cols { flex-direction: column !important; }
+      .left-col  { border-right: none !important; padding-right: 0 !important; }
+      .right-col { position: static !important; padding-left: 0 !important; }
+      .hdr-inner, .main-inner { padding-left: 16px !important; padding-right: 16px !important; }
+      .cat-tabs  { flex-wrap: wrap; }
+      .cat-tab   { flex: 1 1 40%; border-bottom: 1px solid var(--border); }
+    }
   </style>
 </head>
-<body class="bg-black">
-  <div id="root"></div>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+  const { useState, useEffect, useMemo, useRef } = React;
 
-  <script type="text/babel" data-presets="react">
-    const { useState, useEffect, useMemo } = React;
+  // ── ADMIN HASH ─────────────────────────────────────────────────
+  const ADMIN_PASSWORD_HASH = "7da41059a46f5f3980547844205d27b646ac32baa60316896bd044c0bf1ee852";
+  async function sha256Hex(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }
 
-    // ===================================================================
-    // ADMIN-PASSWORT (SHA-256, Default "aerocompact")
-    // ===================================================================
-    const ADMIN_PASSWORD_HASH =
-      "7da41059a46f5f3980547844205d27b646ac32baa60316896bd044c0bf1ee852";
+  // ── CONFIG ─────────────────────────────────────────────────────
+  const FALLBACK_CONFIG = {
+    models: {
+      "Flat|GS10plus|Ost/West|KSK": { kategorie:"Flat",system:"GS10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-13.146223,58.155306,-34.861344,174.557652],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9965,max_error:2.3,rmse:1.29,n_data_points:8,polynomial_degree:3},
+      "Flat|GS15|Süd|KSK": { kategorie:"Flat",system:"GS15",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[125.672222,-66.628333,156.556111],wind_range:[0.1,1.0],wind_anfrage_threshold:1.2,fixed_snow:0.1,r_squared:1.0,max_error:0.0,rmse:0.0,n_data_points:3,polynomial_degree:2},
+      "Flat|S10|Süd|KSK": { kategorie:"Flat",system:"S10",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[61.315648,-25.923358,144.730788],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:0.9962,max_error:2.24,rmse:1.5,n_data_points:4,polynomial_degree:2},
+      "Flat|S10 alpine|Süd|KSK": { kategorie:"Flat",system:"S10 alpine",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[61.315648,-25.923358,243.310788],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:0.9962,max_error:2.24,rmse:1.5,n_data_points:4,polynomial_degree:2},
+      "Flat|S10plus|Ost/West|KSK": { kategorie:"Flat",system:"S10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-11.856688,47.123507,-31.375407,104.507305],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9776,max_error:3.57,rmse:1.92,n_data_points:8,polynomial_degree:3},
+      "Flat|S10plus alpine|Ost/West|KSK": { kategorie:"Flat",system:"S10plus alpine",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-11.856688,47.123507,-31.375407,181.617305],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9776,max_error:3.57,rmse:1.92,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2|Süd|KSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[5.778695,-2.505668,3.467043,162.387346],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9942,max_error:1.98,rmse:1.07,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2|Süd|LSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"LSK",type:"poly_wind",wind_coef:[15.404742,-36.887898,31.303502,265.38337],wind_range:[0.1,1.95],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9791,max_error:2.32,rmse:1.44,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2plus|Ost/West|KSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[1.845028,-1.560569,1.482203,105.095068],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9899,max_error:0.58,rmse:0.38,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2plus|Ost/West|LSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[9.229777,-30.599737,36.441399,191.289379],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9939,max_error:0.69,rmse:0.45,n_data_points:8,polynomial_degree:3},
+      "Flat|S_Base|Ost/West|LSK": { kategorie:"Flat",system:"S_Base",ausrichtung:"Ost/West",klemmung:"LSK",type:"constant",value:157.86,wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,n_data_points:8},
+      "Pitch|XM-F|—|—": { kategorie:"Pitch",system:"XM-F",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:181.6,wind_coef:[55.547065,-29.140583,2.229737],snow_coef:[1.85801,-6.468626,26.812175,-4.310213],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9957,snow_r_squared:0.9789,wind_max_error:8.61,snow_max_error:13.01},
+      "Pitch|XT-R ohne|—|—": { kategorie:"Pitch",system:"XT-R ohne",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:100.73,wind_coef:[-57.077798,169.321763,-81.528039,6.96262],snow_coef:[-14.418603,61.153499,-33.80111,3.35175],wind_range:[0.1,1.6],snow_range:[0.1,2.5],wind_anfrage_threshold:1.8,snow_anfrage_threshold:3.0,wind_r_squared:0.984,snow_r_squared:0.9837,wind_max_error:7.87,snow_max_error:7.06}
+    },
+    meta: { stand:"04/2026", modul:"TSM-NEG9R.25 450W FB", hinweis:"Listenpreise je kWp." }
+  };
+  const PLACEHOLDER_CATEGORIES = {
+    METAL: { label:"CompactMETAL (Blechdach)", systems:["TM (Trapezblech)","TL (Längsschiene)","TR"] },
+    GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground/Flat"] }
+  };
+  const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.02, CH:1.15, OTHER:1.08 };
+  const LS_CONFIG="aerocompact-config-v3", LS_FACTORS="aerocompact-factors-v3", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
-    async function sha256Hex(str) {
-      const buf = new TextEncoder().encode(str);
-      const hash = await crypto.subtle.digest("SHA-256", buf);
-      return Array.from(new Uint8Array(hash))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
+  // ── I18N ───────────────────────────────────────────────────────
+  const T = {
+    de:{ title:"Richtpreis-Rechner", montagesystem:"Montagesystem", systemKategorie:"System-Kategorie", flat:"CompactFLAT", flatSub:"Flachdach", pitch:"CompactPITCH", pitchSub:"Schrägdach", metal:"CompactMETAL", metalSub:"Blechdach", ground:"CompactGROUND", groundSub:"Freifläche", system:"System", klemmung:"Klemmung", ausrichtung:"Ausrichtung", ksk:"Kurze Seite", lsk:"Lange Seite", ow:"O/W", sued:"Süd", alpineLabel:"Alpine", alpineSub:"verstärkt für hohe Schneelasten", standortLasten:"Standort & Lasten", land:"Land", windlast:"Windlast", schneelast:"Schneelast", flatHinweis:"Schneelast ohne Einfluss bei Flachdachsystem", modulKonditionen:"Modul & Konditionen", leistung:"Leistung (Wp)", referenzmodul:"Referenzmodul", anzahlModule:"Anzahl Module", rabatt:"Kundenrabatt (%)", output:"Ergebnis", kostenProKwp:"Kosten pro kWp", gesamtkosten:"Gesamtkosten", moduleLabel:"Module", kostenProModul:"pro Modul", extrapoliert:"Extrapoliert", preisAufAnfrage:"Preis auf Anfrage", modellNichtVerfuegbar:"Modell nicht verfügbar", modellpreis:"Modellpreis", laenderfaktor:"Länderfaktor", rabattLine:"Rabatt", disclaimerTitle:"Alle Angaben ohne Gewähr", disclaimerBody:"Ersetzt keine statische Planung. Listenpreise je kWp, Stand", backendTitle:"Backend · Konfiguration", zuruecksetzen:"Zurücksetzen", modellKonfig:"Modell-Konfiguration (JSON)", aktuellLaden:"Laden", importieren:"Importieren", jsonPlaceholder:"JSON aus Regression-Skript hier einfügen…", laenderfaktoren:"Länderfaktoren", laenderfaktorenSub:"Multiplikativer Aufschlag auf €/kWp.", aktuellesModell:"Modell:", modelltyp:"Typ", windRange:"Wind-Range", snowRange:"Schnee-Range", anfrageWind:"Anfrage Wind", anfrageSchnee:"Anfrage Schnee", datenpunkte:"Datenpunkte", fixSnow:"fix 0.1", adminLogin:"Admin-Login", passwort:"Passwort", abbrechen:"Abbrechen", loginBtn:"Login", sessionHinweis:"Session läuft nach 4h ab.", falschesPasswort:"Falsches Passwort", datenInAktualisierung:"Daten in Aktualisierung", bitteVertriebAnfragen:"Bitte Vertrieb anfragen.", kostenfunktionenFolgen:(s)=>`Kostenfunktionen für ${s} folgen.`, countries:{ DE:"Deutschland", AT:"Österreich", CH:"Schweiz", OTHER:"International" }, backend:"Backend", confirmReset:"Konfiguration und Faktoren auf Default zurücksetzen?", modelleImportiert:(n)=>`✓ ${n} Modelle importiert.`, jsonError:"JSON-Fehler:", expectModels:"Erwarte 'models' als Objekt.", modelleAktiv:"Modelle aktiv", totalKwp:"kWp gesamt" },
+    en:{ title:"Price Calculator", montagesystem:"Mounting System", systemKategorie:"System Category", flat:"CompactFLAT", flatSub:"Flat Roof", pitch:"CompactPITCH", pitchSub:"Pitched Roof", metal:"CompactMETAL", metalSub:"Metal Roof", ground:"CompactGROUND", groundSub:"Ground-Mount", system:"System", klemmung:"Clamping", ausrichtung:"Orientation", ksk:"Short Side", lsk:"Long Side", ow:"E/W", sued:"South", alpineLabel:"Alpine", alpineSub:"reinforced for high snow loads", standortLasten:"Location & Loads", land:"Country", windlast:"Wind Load", schneelast:"Snow Load", flatHinweis:"Snow load has no effect for flat roof systems", modulKonditionen:"Module & Terms", leistung:"Power (Wp)", referenzmodul:"Reference module", anzahlModule:"Number of Modules", rabatt:"Customer Discount (%)", output:"Result", kostenProKwp:"Cost per kWp", gesamtkosten:"Total Cost", moduleLabel:"modules", kostenProModul:"per Module", extrapoliert:"Extrapolated", preisAufAnfrage:"Price on Request", modellNichtVerfuegbar:"Model not available", modellpreis:"Model price", laenderfaktor:"Country factor", rabattLine:"Discount", disclaimerTitle:"All data without guarantee", disclaimerBody:"Does not replace structural planning. List prices per kWp, as of", backendTitle:"Backend · Configuration", zuruecksetzen:"Reset", modellKonfig:"Model Configuration (JSON)", aktuellLaden:"Load", importieren:"Import", jsonPlaceholder:"Paste JSON from regression script here…", laenderfaktoren:"Country Factors", laenderfaktorenSub:"Multiplicative markup on €/kWp.", aktuellesModell:"Model:", modelltyp:"Type", windRange:"Wind range", snowRange:"Snow range", anfrageWind:"Wind threshold", anfrageSchnee:"Snow threshold", datenpunkte:"Data points", fixSnow:"fix 0.1", adminLogin:"Admin Login", passwort:"Password", abbrechen:"Cancel", loginBtn:"Login", sessionHinweis:"Session expires after 4h.", falschesPasswort:"Wrong password", datenInAktualisierung:"Data being updated", bitteVertriebAnfragen:"Please contact sales.", kostenfunktionenFolgen:(s)=>`Cost functions for ${s} coming soon.`, countries:{ DE:"Germany", AT:"Austria", CH:"Switzerland", OTHER:"International" }, backend:"Backend", confirmReset:"Reset configuration and factors to default?", modelleImportiert:(n)=>`✓ ${n} models imported.`, jsonError:"JSON error:", expectModels:"Expected 'models' as object.", modelleAktiv:"models active", totalKwp:"kWp total" },
+    it:{ title:"Calcolatore Prezzi", montagesystem:"Sistema di Montaggio", systemKategorie:"Categoria Sistema", flat:"CompactFLAT", flatSub:"Tetto Piano", pitch:"CompactPITCH", pitchSub:"Tetto Inclinato", metal:"CompactMETAL", metalSub:"Lamiera", ground:"CompactGROUND", groundSub:"A Terra", system:"Sistema", klemmung:"Morsetto", ausrichtung:"Orientamento", ksk:"Lato Corto", lsk:"Lato Lungo", ow:"E/O", sued:"Sud", alpineLabel:"Alpine", alpineSub:"rinforzata per carichi neve elevati", standortLasten:"Luogo & Carichi", land:"Paese", windlast:"Carico Vento", schneelast:"Carico Neve", flatHinweis:"Il carico neve non influisce sui sistemi a tetto piano", modulKonditionen:"Modulo & Condizioni", leistung:"Potenza (Wp)", referenzmodul:"Modulo di riferimento", anzahlModule:"Numero Moduli", rabatt:"Sconto Cliente (%)", output:"Risultato", kostenProKwp:"Costo per kWp", gesamtkosten:"Costo Totale", moduleLabel:"moduli", kostenProModul:"per Modulo", extrapoliert:"Estrapolato", preisAufAnfrage:"Prezzo su Richiesta", modellNichtVerfuegbar:"Modello non disponibile", modellpreis:"Prezzo modello", laenderfaktor:"Fattore paese", rabattLine:"Sconto", disclaimerTitle:"Tutti i dati senza garanzia", disclaimerBody:"Non sostituisce la progettazione strutturale. Listini al kWp, aggiornato", backendTitle:"Backend · Configurazione", zuruecksetzen:"Reset", modellKonfig:"Configurazione Modelli (JSON)", aktuellLaden:"Carica", importieren:"Importa", jsonPlaceholder:"Incolla JSON dallo script di regressione qui…", laenderfaktoren:"Fattori paese", laenderfaktorenSub:"Si applicano moltiplicativamente al valore €/kWp.", aktuellesModell:"Modello:", modelltyp:"Tipo", windRange:"Range vento", snowRange:"Range neve", anfrageWind:"Soglia vento", anfrageSchnee:"Soglia neve", datenpunkte:"Punti dati", fixSnow:"fix 0.1", adminLogin:"Login Admin", passwort:"Password", abbrechen:"Annulla", loginBtn:"Accedi", sessionHinweis:"La sessione scade dopo 4h.", falschesPasswort:"Password errata", datenInAktualisierung:"Dati in aggiornamento", bitteVertriebAnfragen:"Contattare il commerciale.", kostenfunktionenFolgen:(s)=>`Funzioni di costo per ${s} in arrivo.`, countries:{ DE:"Germania", AT:"Austria", CH:"Svizzera", OTHER:"Internazionale" }, backend:"Backend", confirmReset:"Ripristinare configurazione e fattori predefiniti?", modelleImportiert:(n)=>`✓ ${n} modelli importati.`, jsonError:"Errore JSON:", expectModels:"Atteso 'models' come oggetto.", modelleAktiv:"modelli attivi", totalKwp:"kWp totale" }
+  };
+
+  // ── MATH ───────────────────────────────────────────────────────
+  function evalPoly(coef, x) { let y=0; for(const c of coef) y=y*x+c; return y; }
+  function makeKey(kat, sys, aus, klem) { return kat==="Pitch" ? `Pitch|${sys}|—|—` : `Flat|${sys}|${aus}|${klem}`; }
+
+  function richtpreisProKwp({ kategorie, system, ausrichtung, klemmung, schnee, wind, config, t }) {
+    if(kategorie==="METAL"||kategorie==="GROUND") return { preis:null, status:"anfrage", meta:{ reason: t?.datenInAktualisierung||"Daten in Aktualisierung" } };
+    const key=makeKey(kategorie,system,ausrichtung,klemmung);
+    const m=config.models[key];
+    if(!m) return { preis:null, status:"unbekannt", meta:{ key, reason:"—" } };
+    if(m.wind_anfrage_threshold!=null && wind>=m.wind_anfrage_threshold) return { preis:null, status:"anfrage", meta:{ key, grund:`${t?.windlast||"Wind"} ≥ ${m.wind_anfrage_threshold} kN/m²` } };
+    if(m.snow_anfrage_threshold!=null && schnee>=m.snow_anfrage_threshold) return { preis:null, status:"anfrage", meta:{ key, grund:`${t?.schneelast||"Schnee"} ≥ ${m.snow_anfrage_threshold} kN/m²` } };
+    let preis;
+    if(m.type==="constant") preis=m.value;
+    else if(m.type==="poly_wind") preis=evalPoly(m.wind_coef,wind);
+    else if(m.type==="separable_2d") preis=m.base+evalPoly(m.wind_coef,wind)+evalPoly(m.snow_coef,schnee);
+    else return { preis:null, status:"unbekannt", meta:{ key } };
+    let status="ok"; const ausserhalb=[];
+    if(m.wind_range&&(wind<m.wind_range[0]||wind>m.wind_range[1])) ausserhalb.push(`${t?.windlast||"Wind"} ${wind.toFixed(1)} ∉ [${m.wind_range[0]}, ${m.wind_range[1]}]`);
+    if(m.snow_range&&(schnee<m.snow_range[0]||schnee>m.snow_range[1])) ausserhalb.push(`${t?.schneelast||"Schnee"} ${schnee.toFixed(1)} ∉ [${m.snow_range[0]}, ${m.snow_range[1]}]`);
+    if(ausserhalb.length) status="extrapoliert";
+    return { preis:Math.round(preis*100)/100, status, meta:{ key, ausserhalb, model:m.type, m } };
+  }
+
+  function indexConfig(config) {
+    const flat={}, pitch=[];
+    for(const [key,m] of Object.entries(config.models)) {
+      if(m.kategorie==="Flat") {
+        if(!flat[m.system]) flat[m.system]={ system:m.system, variants:[] };
+        flat[m.system].variants.push({ key, klemmung:m.klemmung, ausrichtung:m.ausrichtung });
+      } else if(m.kategorie==="Pitch") pitch.push({ key, system:m.system });
     }
-
-    // ===================================================================
-    // KOSTENFUNKTIONEN (Polynom-Modelle, Stand 04/2026)
-    // Quelle: Richtpreisliste_Masterdata.xlsx → Regression
-    // FLAT-Systeme:  €/kWp = polynom(Wind)            (Schnee fix = 0.1)
-    // PITCH-Systeme: €/kWp = base + Δw(Wind) + Δs(Schnee)   (separabel-additiv)
-    // ===================================================================
-    const FALLBACK_CONFIG = {
-      models: {
-        "Flat|GS10plus|Ost/West|KSK": {
-          kategorie: "Flat", system: "GS10plus", ausrichtung: "Ost/West", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [-13.146223, 58.155306, -34.861344, 174.557652],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9965, max_error: 2.3, rmse: 1.29, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|GS15|Süd|KSK": {
-          kategorie: "Flat", system: "GS15", ausrichtung: "Süd", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [125.672222, -66.628333, 156.556111],
-          wind_range: [0.1, 1.0], wind_anfrage_threshold: 1.2, fixed_snow: 0.1,
-          r_squared: 1.0, max_error: 0.0, rmse: 0.0, n_data_points: 3, polynomial_degree: 2
-        },
-        "Flat|S10|Süd|KSK": {
-          kategorie: "Flat", system: "S10", ausrichtung: "Süd", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [61.315648, -25.923358, 144.730788],
-          wind_range: [0.1, 1.2], wind_anfrage_threshold: 1.4, fixed_snow: 0.1,
-          r_squared: 0.9962, max_error: 2.24, rmse: 1.5, n_data_points: 4, polynomial_degree: 2
-        },
-        "Flat|S10 alpine|Süd|KSK": {
-          kategorie: "Flat", system: "S10 alpine", ausrichtung: "Süd", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [61.315648, -25.923358, 243.310788],
-          wind_range: [0.1, 1.2], wind_anfrage_threshold: 1.4, fixed_snow: 0.1,
-          r_squared: 0.9962, max_error: 2.24, rmse: 1.5, n_data_points: 4, polynomial_degree: 2
-        },
-        "Flat|S10plus|Ost/West|KSK": {
-          kategorie: "Flat", system: "S10plus", ausrichtung: "Ost/West", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [-11.856688, 47.123507, -31.375407, 104.507305],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9776, max_error: 3.57, rmse: 1.92, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|S10plus alpine|Ost/West|KSK": {
-          kategorie: "Flat", system: "S10plus alpine", ausrichtung: "Ost/West", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [-11.856688, 47.123507, -31.375407, 181.617305],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9776, max_error: 3.57, rmse: 1.92, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|SN2|Süd|KSK": {
-          kategorie: "Flat", system: "SN2", ausrichtung: "Süd", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [5.778695, -2.505668, 3.467043, 162.387346],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9942, max_error: 1.98, rmse: 1.07, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|SN2|Süd|LSK": {
-          kategorie: "Flat", system: "SN2", ausrichtung: "Süd", klemmung: "LSK",
-          type: "poly_wind",
-          wind_coef: [15.404742, -36.887898, 31.303502, 265.38337],
-          wind_range: [0.1, 1.95], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9791, max_error: 2.32, rmse: 1.44, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|SN2plus|Ost/West|KSK": {
-          kategorie: "Flat", system: "SN2plus", ausrichtung: "Ost/West", klemmung: "KSK",
-          type: "poly_wind",
-          wind_coef: [1.845028, -1.560569, 1.482203, 105.095068],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9899, max_error: 0.58, rmse: 0.38, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|SN2plus|Ost/West|LSK": {
-          kategorie: "Flat", system: "SN2plus", ausrichtung: "Ost/West", klemmung: "LSK",
-          type: "poly_wind",
-          wind_coef: [9.229777, -30.599737, 36.441399, 191.289379],
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1,
-          r_squared: 0.9939, max_error: 0.69, rmse: 0.45, n_data_points: 8, polynomial_degree: 3
-        },
-        "Flat|S_Base|Ost/West|LSK": {
-          kategorie: "Flat", system: "S_Base", ausrichtung: "Ost/West", klemmung: "LSK",
-          type: "constant",
-          value: 157.86,
-          wind_range: [0.1, 2.0], wind_anfrage_threshold: null, fixed_snow: 0.1, n_data_points: 8
-        },
-        "Pitch|XM-F|—|—": {
-          kategorie: "Pitch", system: "XM-F", ausrichtung: "—", klemmung: "—",
-          type: "separable_2d",
-          base: 181.6,
-          wind_coef: [55.547065, -29.140583, 2.229737],
-          snow_coef: [1.85801, -6.468626, 26.812175, -4.310213],
-          wind_range: [0.1, 2.0], snow_range: [0.1, 4.0],
-          wind_anfrage_threshold: null, snow_anfrage_threshold: null,
-          wind_r_squared: 0.9957, snow_r_squared: 0.9789,
-          wind_max_error: 8.61, snow_max_error: 13.01
-        },
-        "Pitch|XT-R ohne|—|—": {
-          kategorie: "Pitch", system: "XT-R ohne", ausrichtung: "—", klemmung: "—",
-          type: "separable_2d",
-          base: 100.73,
-          wind_coef: [-57.077798, 169.321763, -81.528039, 6.96262],
-          snow_coef: [-14.418603, 61.153499, -33.80111, 3.35175],
-          wind_range: [0.1, 1.6], snow_range: [0.1, 2.5],
-          wind_anfrage_threshold: 1.8, snow_anfrage_threshold: 3.0,
-          wind_r_squared: 0.984, snow_r_squared: 0.9837,
-          wind_max_error: 7.87, snow_max_error: 7.06
-        }
-      },
-      meta: {
-        stand: "04/2026",
-        modul: "TSM-NEG9R.25 450W FB",
-        hinweis: "Listenpreise je kWp. Für FLAT-Systeme nur Wind variabel (Schnee fix 0,1 kN/m²). Für PITCH-Systeme separables additives Modell."
-      }
-    };
-
-    // Platzhalter-Kategorien (Daten in Aktualisierung)
-    const PLACEHOLDER_CATEGORIES = {
-      METAL:  { label: "CompactMETAL (Blechdach)",   systems: ["TM (Trapezblech)", "TL (Längsschiene)", "TR"] },
-      GROUND: { label: "CompactGROUND (Freifläche)", systems: ["GS Ground/Flat"] }
-    };
-
-    const FALLBACK_COUNTRY_FACTORS = {
-      DE: 1.00, AT: 1.02, CH: 1.15, OTHER: 1.08
-    };
-
-    const LS_CONFIG  = "aerocompact-config-v3";
-    const LS_FACTORS = "aerocompact-factors-v3";
-    const LS_AUTH    = "aerocompact-admin-session";
-    const LS_LANG    = "aerocompact-lang";
-
-    // ===================================================================
-    // I18N
-    // ===================================================================
-    const TRANSLATIONS = {
-      de: {
-        title: "Richtpreis-Rechner",
-        montagesystem: "Montagesystem",
-        systemKategorie: "System-Kategorie",
-        flat: "CompactFLAT (Flachdach)",
-        pitch: "CompactPITCH (Schrägdach)",
-        metal: "CompactMETAL (Blechdach) — Anfrage",
-        ground: "CompactGROUND (Freifläche) — Anfrage",
-        system: "System",
-        klemmung: "Klemmung",
-        ausrichtung: "Ausrichtung",
-        ksk: "Kurze Seite",
-        lsk: "Lange Seite",
-        ow: "O/W",
-        sued: "Süd",
-        alpineLabel: "Alpine-Ausführung",
-        alpineSub: "verstärkt für hohe Schneelasten",
-        standortLasten: "Standort & Lasten",
-        land: "Land",
-        windlast: "Windlast",
-        schneelast: "Schneelast",
-        flatHinweis: "FLAT-Systeme: Schneelast ist im Modell auf 0.1 kN/m² fixiert.",
-        modulKonditionen: "Modul & Konditionen",
-        leistung: "Leistung (Wp)",
-        referenzmodul: "Referenzmodul",
-        anzahlModule: "Anzahl Module",
-        rabatt: "Kundenrabatt (%)",
-        output: "Output",
-        kostenProKwp: "Kosten pro kWp",
-        gesamtkostenBei: "Gesamtkosten bei",
-        moduleLabel: "Module",
-        kostenProModul: "Kosten pro Modul",
-        extrapoliert: "Extrapoliert",
-        preisAufAnfrage: "Preis auf Anfrage",
-        modellNichtVerfuegbar: "Modell nicht verfügbar",
-        modellpreis: "Modellpreis:",
-        laenderfaktor: "× Länderfaktor",
-        rabattLine: "− Rabatt:",
-        disclaimerTitle: "Disclaimer → alle Angaben ohne Gewähr",
-        disclaimerBody: "Dieser Rechner ersetzt keine statische Planung. Listenpreise je kWp, Stand",
-        backendTitle: "Backend · Konfiguration",
-        zuruecksetzen: "Zurücksetzen",
-        modellKonfig: "Modell-Konfiguration (JSON)",
-        aktuellLaden: "Aktuell laden",
-        importieren: "Importieren",
-        jsonPlaceholder: "JSON aus Regression-Skript hier einfügen…",
-        laenderfaktoren: "Länderfaktoren (kommerzieller Aufschlag)",
-        laenderfaktorenSub: "Wirken multiplikativ auf den €/kWp-Wert.",
-        aktuellesModell: "Aktuelles Modell:",
-        modelltyp: "Modelltyp",
-        windRange: "Wind-Range",
-        snowRange: "Schnee-Range",
-        anfrageWind: "Anfrage Wind",
-        anfrageSchnee: "Anfrage Schnee",
-        datenpunkte: "Datenpunkte",
-        fixSnow: "fix 0.1",
-        adminLogin: "Admin-Login",
-        passwort: "Passwort",
-        abbrechen: "Abbrechen",
-        loginBtn: "Login",
-        sessionHinweis: "Session läuft nach 4h ab.",
-        falschesPasswort: "Falsches Passwort",
-        datenInAktualisierung: "Daten in Aktualisierung – Preis auf Anfrage",
-        bitteVertriebAnfragen: "Bitte Vertrieb anfragen.",
-        kostenfunktionenFolgen: (sys) => `Kostenfunktionen für ${sys} folgen.`,
-        countries: { DE: "Deutschland", AT: "Österreich", CH: "Schweiz", OTHER: "International" },
-        backend: "Backend",
-        confirmReset: "Konfiguration und Faktoren auf Default zurücksetzen?",
-        modelleImportiert: (n) => `✓ ${n} Modelle importiert.`,
-        jsonError: "JSON-Fehler:",
-        expectModels: "Erwarte 'models' als Objekt.",
-        modelleAktiv: "Modelle aktiv",
-      },
-      en: {
-        title: "Indicative Price Calculator",
-        montagesystem: "Mounting System",
-        systemKategorie: "System Category",
-        flat: "CompactFLAT (Flat Roof)",
-        pitch: "CompactPITCH (Pitched Roof)",
-        metal: "CompactMETAL (Metal Roof) — On Request",
-        ground: "CompactGROUND (Ground-Mount) — On Request",
-        system: "System",
-        klemmung: "Clamping",
-        ausrichtung: "Orientation",
-        ksk: "Short Side",
-        lsk: "Long Side",
-        ow: "E/W",
-        sued: "South",
-        alpineLabel: "Alpine Edition",
-        alpineSub: "reinforced for high snow loads",
-        standortLasten: "Location & Loads",
-        land: "Country",
-        windlast: "Wind Load",
-        schneelast: "Snow Load",
-        flatHinweis: "FLAT systems: snow load is fixed at 0.1 kN/m² in the model.",
-        modulKonditionen: "Module & Terms",
-        leistung: "Power (Wp)",
-        referenzmodul: "Reference module",
-        anzahlModule: "Number of Modules",
-        rabatt: "Customer Discount (%)",
-        output: "Output",
-        kostenProKwp: "Cost per kWp",
-        gesamtkostenBei: "Total cost at",
-        moduleLabel: "modules",
-        kostenProModul: "Cost per Module",
-        extrapoliert: "Extrapolated",
-        preisAufAnfrage: "Price on Request",
-        modellNichtVerfuegbar: "Model not available",
-        modellpreis: "Model price:",
-        laenderfaktor: "× Country factor",
-        rabattLine: "− Discount:",
-        disclaimerTitle: "Disclaimer → all data without guarantee",
-        disclaimerBody: "This calculator does not replace structural engineering. List prices per kWp, as of",
-        backendTitle: "Backend · Configuration",
-        zuruecksetzen: "Reset",
-        modellKonfig: "Model Configuration (JSON)",
-        aktuellLaden: "Load current",
-        importieren: "Import",
-        jsonPlaceholder: "Paste JSON from regression script here…",
-        laenderfaktoren: "Country factors (commercial markup)",
-        laenderfaktorenSub: "Multiplicative on the €/kWp value.",
-        aktuellesModell: "Current model:",
-        modelltyp: "Model type",
-        windRange: "Wind range",
-        snowRange: "Snow range",
-        anfrageWind: "Wind threshold",
-        anfrageSchnee: "Snow threshold",
-        datenpunkte: "Data points",
-        fixSnow: "fix 0.1",
-        adminLogin: "Admin Login",
-        passwort: "Password",
-        abbrechen: "Cancel",
-        loginBtn: "Login",
-        sessionHinweis: "Session expires after 4h.",
-        falschesPasswort: "Wrong password",
-        datenInAktualisierung: "Data being updated – price on request",
-        bitteVertriebAnfragen: "Please contact sales.",
-        kostenfunktionenFolgen: (sys) => `Cost functions for ${sys} coming soon.`,
-        countries: { DE: "Germany", AT: "Austria", CH: "Switzerland", OTHER: "International" },
-        backend: "Backend",
-        confirmReset: "Reset configuration and factors to default?",
-        modelleImportiert: (n) => `✓ ${n} models imported.`,
-        jsonError: "JSON error:",
-        expectModels: "Expected 'models' as object.",
-        modelleAktiv: "models active",
-      },
-      it: {
-        title: "Calcolatore Prezzi Indicativi",
-        montagesystem: "Sistema di Montaggio",
-        systemKategorie: "Categoria Sistema",
-        flat: "CompactFLAT (Tetto Piano)",
-        pitch: "CompactPITCH (Tetto Inclinato)",
-        metal: "CompactMETAL (Lamiera) — Su richiesta",
-        ground: "CompactGROUND (A Terra) — Su richiesta",
-        system: "Sistema",
-        klemmung: "Morsetto",
-        ausrichtung: "Orientamento",
-        ksk: "Lato Corto",
-        lsk: "Lato Lungo",
-        ow: "E/O",
-        sued: "Sud",
-        alpineLabel: "Versione Alpine",
-        alpineSub: "rinforzata per carichi neve elevati",
-        standortLasten: "Luogo & Carichi",
-        land: "Paese",
-        windlast: "Carico Vento",
-        schneelast: "Carico Neve",
-        flatHinweis: "Sistemi FLAT: il carico neve è fissato a 0.1 kN/m² nel modello.",
-        modulKonditionen: "Modulo & Condizioni",
-        leistung: "Potenza (Wp)",
-        referenzmodul: "Modulo di riferimento",
-        anzahlModule: "Numero di Moduli",
-        rabatt: "Sconto Cliente (%)",
-        output: "Risultato",
-        kostenProKwp: "Costo per kWp",
-        gesamtkostenBei: "Costo totale per",
-        moduleLabel: "moduli",
-        kostenProModul: "Costo per Modulo",
-        extrapoliert: "Estrapolato",
-        preisAufAnfrage: "Prezzo su Richiesta",
-        modellNichtVerfuegbar: "Modello non disponibile",
-        modellpreis: "Prezzo modello:",
-        laenderfaktor: "× Fattore paese",
-        rabattLine: "− Sconto:",
-        disclaimerTitle: "Disclaimer → tutti i dati senza garanzia",
-        disclaimerBody: "Questo calcolatore non sostituisce la progettazione strutturale. Listini al kWp, aggiornato",
-        backendTitle: "Backend · Configurazione",
-        zuruecksetzen: "Reset",
-        modellKonfig: "Configurazione Modelli (JSON)",
-        aktuellLaden: "Carica attuale",
-        importieren: "Importa",
-        jsonPlaceholder: "Incolla JSON dallo script di regressione qui…",
-        laenderfaktoren: "Fattori paese (maggiorazione commerciale)",
-        laenderfaktorenSub: "Si applicano moltiplicativamente al valore €/kWp.",
-        aktuellesModell: "Modello attuale:",
-        modelltyp: "Tipo modello",
-        windRange: "Range vento",
-        snowRange: "Range neve",
-        anfrageWind: "Soglia vento",
-        anfrageSchnee: "Soglia neve",
-        datenpunkte: "Punti dati",
-        fixSnow: "fix 0.1",
-        adminLogin: "Login Admin",
-        passwort: "Password",
-        abbrechen: "Annulla",
-        loginBtn: "Accedi",
-        sessionHinweis: "La sessione scade dopo 4h.",
-        falschesPasswort: "Password errata",
-        datenInAktualisierung: "Dati in aggiornamento – prezzo su richiesta",
-        bitteVertriebAnfragen: "Contattare il commerciale.",
-        kostenfunktionenFolgen: (sys) => `Funzioni di costo per ${sys} in arrivo.`,
-        countries: { DE: "Germania", AT: "Austria", CH: "Svizzera", OTHER: "Internazionale" },
-        backend: "Backend",
-        confirmReset: "Ripristinare configurazione e fattori predefiniti?",
-        modelleImportiert: (n) => `✓ ${n} modelli importati.`,
-        jsonError: "Errore JSON:",
-        expectModels: "Atteso 'models' come oggetto.",
-        modelleAktiv: "modelli attivi",
-      },
-    };
-
-    // -------------------------------------------------------------------
-    // Math-Helper (Horner-Schema, höchste Potenz zuerst)
-    // -------------------------------------------------------------------
-    function evalPoly(coef, x) {
-      let y = 0;
-      for (const c of coef) y = y * x + c;
-      return y;
+    for(const sys of Object.values(flat)) {
+      sys.klemmungen=[...new Set(sys.variants.map(v=>v.klemmung))];
+      sys.ausrichtungen=[...new Set(sys.variants.map(v=>v.ausrichtung))];
     }
+    return { flat, pitch };
+  }
+  const clone = o => JSON.parse(JSON.stringify(o));
 
-    function makeKey(kategorie, system, ausrichtung, klemmung) {
-      if (kategorie === "Pitch") return `Pitch|${system}|—|—`;
-      return `Flat|${system}|${ausrichtung}|${klemmung}`;
-    }
-
-    // Hauptberechnung (€/kWp)
-    function richtpreisProKwp({ kategorie, system, ausrichtung, klemmung, schnee, wind, config, t }) {
-      // Platzhalter-Kategorien sofort als Anfrage
-      if (kategorie === "METAL" || kategorie === "GROUND") {
-        return {
-          preis: null, status: "anfrage",
-          meta: { reason: t ? t.datenInAktualisierung : "Daten in Aktualisierung – Preis auf Anfrage" }
-        };
+  // ── ANIMATED NUMBER ────────────────────────────────────────────
+  function useAnimatedNumber(target, duration=350) {
+    const [display, setDisplay] = useState(target);
+    const animRef = useRef(null);
+    const prevRef = useRef(target);
+    useEffect(() => {
+      const start=prevRef.current, end=target, t0=performance.now();
+      if(animRef.current) cancelAnimationFrame(animRef.current);
+      function step(now) {
+        const p=Math.min((now-t0)/duration,1);
+        const e=1-Math.pow(1-p,3);
+        setDisplay(start+(end-start)*e);
+        if(p<1) animRef.current=requestAnimationFrame(step);
+        else prevRef.current=end;
       }
+      animRef.current=requestAnimationFrame(step);
+      return ()=>cancelAnimationFrame(animRef.current);
+    }, [target]);
+    return display;
+  }
 
-      const key = makeKey(kategorie, system, ausrichtung, klemmung);
-      const m = config.models[key];
-      if (!m) {
-        return { preis: null, status: "unbekannt", meta: { key, reason: "—" } };
-      }
+  // ── ICON ───────────────────────────────────────────────────────
+  const Icon = ({ name, size=18, style={} }) => {
+    const ref = useRef(null);
+    useEffect(() => {
+      if(!ref.current) return;
+      ref.current.innerHTML='';
+      const el=document.createElement('i');
+      el.setAttribute('data-lucide', name);
+      ref.current.appendChild(el);
+      if(window.lucide) window.lucide.createIcons({ icons:window.lucide.icons });
+    }, [name]);
+    return <span ref={ref} className="ico" style={{ width:size, height:size, ...style }} />;
+  };
 
-      // Anfrage-Schwellen
-      if (m.wind_anfrage_threshold != null && wind >= m.wind_anfrage_threshold) {
-        const lbl = t ? t.windlast : "Wind";
-        return {
-          preis: null, status: "anfrage",
-          meta: { key, grund: `${lbl} ≥ ${m.wind_anfrage_threshold} kN/m²` }
-        };
-      }
-      if (m.snow_anfrage_threshold != null && schnee >= m.snow_anfrage_threshold) {
-        const lbl = t ? t.schneelast : "Schnee";
-        return {
-          preis: null, status: "anfrage",
-          meta: { key, grund: `${lbl} ≥ ${m.snow_anfrage_threshold} kN/m²` }
-        };
-      }
-
-      let preis;
-      if (m.type === "constant") {
-        preis = m.value;
-      } else if (m.type === "poly_wind") {
-        preis = evalPoly(m.wind_coef, wind);
-      } else if (m.type === "separable_2d") {
-        preis = m.base + evalPoly(m.wind_coef, wind) + evalPoly(m.snow_coef, schnee);
-      } else {
-        return { preis: null, status: "unbekannt", meta: { key, reason: `Unbekannter Modelltyp ${m.type}` } };
-      }
-
-      // Bereichscheck
-      let status = "ok";
-      const ausserhalb = [];
-      const windLbl = t ? t.windlast : "Wind";
-      const snowLbl = t ? t.schneelast : "Schnee";
-      if (m.wind_range && (wind < m.wind_range[0] || wind > m.wind_range[1])) {
-        ausserhalb.push(`${windLbl} ${wind.toFixed(1)} ∉ [${m.wind_range[0]}, ${m.wind_range[1]}]`);
-      }
-      if (m.snow_range && (schnee < m.snow_range[0] || schnee > m.snow_range[1])) {
-        ausserhalb.push(`${snowLbl} ${schnee.toFixed(1)} ∉ [${m.snow_range[0]}, ${m.snow_range[1]}]`);
-      }
-      if (ausserhalb.length) status = "extrapoliert";
-
-      return {
-        preis: Math.round(preis * 100) / 100,
-        status,
-        meta: { key, ausserhalb, model: m.type, fixed_snow: m.fixed_snow, m }
-      };
-    }
-
-    // Index für UI (System → verfügbare Klemmung/Ausrichtung)
-    function indexConfig(config) {
-      const flat = {}, pitch = [];
-      for (const [key, m] of Object.entries(config.models)) {
-        if (m.kategorie === "Flat") {
-          if (!flat[m.system]) flat[m.system] = { system: m.system, variants: [] };
-          flat[m.system].variants.push({ key, klemmung: m.klemmung, ausrichtung: m.ausrichtung });
-        } else if (m.kategorie === "Pitch") {
-          pitch.push({ key, system: m.system });
-        }
-      }
-      for (const sys of Object.values(flat)) {
-        sys.klemmungen   = [...new Set(sys.variants.map(v => v.klemmung))];
-        sys.ausrichtungen = [...new Set(sys.variants.map(v => v.ausrichtung))];
-      }
-      return { flat, pitch };
-    }
-
-    const clone = (o) => JSON.parse(JSON.stringify(o));
-
-    // -------------------------------------------------------------------
-    // Icon Component
-    // -------------------------------------------------------------------
-    const Icon = ({ name, size = 20, className = "" }) => {
-      const ref = React.useRef(null);
-      React.useEffect(() => {
-        if (ref.current) {
-          ref.current.innerHTML = "";
-          const el = document.createElement("i");
-          el.setAttribute("data-lucide", name);
-          ref.current.appendChild(el);
-          if (window.lucide) window.lucide.createIcons({ icons: window.lucide.icons });
-        }
-      }, [name]);
-      return <span ref={ref} className={`lucide-icon ${className}`} style={{ width: size, height: size }} />;
-    };
-
-    // Segmented Control
-    const Segmented = ({ value, onChange, options }) => (
-      <div className="inline-flex border border-gray-700 bg-black w-full">
-        {options.map((opt, i) => {
-          const active = value === opt.value;
-          const disabled = opt.disabled;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              disabled={disabled}
-              onClick={() => !disabled && onChange(opt.value)}
-              className={`flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                active
-                  ? "bg-[#5CE1E6] text-black"
-                  : disabled
-                    ? "text-gray-700 cursor-not-allowed"
-                    : "text-gray-400 hover:text-white hover:bg-[#5CE1E6]/5"
-              } ${i > 0 ? "border-l border-gray-700" : ""}`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
+  // ── SLIDER FIELD ───────────────────────────────────────────────
+  const SliderField = ({ label, value, min, max, step, onChange, unit, iconName }) => {
+    const pct = ((value-min)/(max-min)*100).toFixed(1);
+    const bg = `linear-gradient(to right, var(--cyan) 0%, var(--cyan) ${pct}%, var(--border2) ${pct}%, var(--border2) 100%)`;
+    return (
+      <div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+            <Icon name={iconName} size={13} style={{ color:'var(--text3)' }}/>
+            <span style={{ fontSize:13, fontWeight:500, color:'var(--text2)' }}>{label}</span>
+          </div>
+          <div style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--cyan)', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', padding:'3px 9px', fontVariantNumeric:'tabular-nums' }}>
+            {value.toFixed(1)} {unit}
+          </div>
+        </div>
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={e=>onChange(Number(e.target.value))}
+          className="slider" style={{ background:bg }}
+        />
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:5 }}>
+          <span style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)' }}>{min}</span>
+          <span style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)' }}>{max}</span>
+        </div>
       </div>
     );
+  };
 
-    // -------------------------------------------------------------------
-    // App
-    // -------------------------------------------------------------------
-    function AerocompactCalculator() {
-      // --- Sprache ---
-      const [lang, setLang] = useState(() => {
-        try {
-          const saved = localStorage.getItem(LS_LANG);
-          if (saved && TRANSLATIONS[saved]) return saved;
-        } catch (e) {}
-        return "de";
-      });
-      useEffect(() => {
-        try { localStorage.setItem(LS_LANG, lang); } catch (e) {}
-      }, [lang]);
-      const t = TRANSLATIONS[lang];
+  // ── SEGMENTED ─────────────────────────────────────────────────
+  const Segmented = ({ value, onChange, options }) => (
+    <div className="seg">
+      {options.map(o => (
+        <button key={o.value} className={`seg-btn${value===o.value?' active':''}${o.disabled?' ':''}`}
+          disabled={o.disabled} onClick={()=>!o.disabled&&onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
 
-      // --- Admin Session ---
-      const [isAdmin, setIsAdmin] = useState(() => {
-        try {
-          const raw = localStorage.getItem(LS_AUTH);
-          if (!raw) return false;
-          const { exp } = JSON.parse(raw);
-          return exp && Date.now() < exp;
-        } catch (e) { return false; }
-      });
-      const [showLogin, setShowLogin] = useState(false);
-      const [showBackend, setShowBackend] = useState(false);
-      const [loginPw, setLoginPw] = useState("");
-      const [loginError, setLoginError] = useState("");
+  // ── MAIN APP ───────────────────────────────────────────────────
+  function AerocompactCalculator() {
+    const [lang, setLang] = useState(() => { try{ const s=localStorage.getItem(LS_LANG); if(s&&T[s]) return s; }catch(e){} return "de"; });
+    useEffect(()=>{ try{ localStorage.setItem(LS_LANG,lang); }catch(e){} },[lang]);
+    const t = T[lang];
 
-      const doLogin = async (e) => {
-        e.preventDefault();
-        const hash = await sha256Hex(loginPw);
-        if (hash === ADMIN_PASSWORD_HASH) {
-          const exp = Date.now() + 4 * 60 * 60 * 1000;
-          localStorage.setItem(LS_AUTH, JSON.stringify({ exp }));
-          setIsAdmin(true);
-          setShowLogin(false);
-          setShowBackend(true);
-          setLoginPw("");
-          setLoginError("");
-        } else {
-          setLoginError(t.falschesPasswort);
-          setLoginPw("");
-        }
-      };
-      const doLogout = () => {
-        localStorage.removeItem(LS_AUTH);
-        setIsAdmin(false);
-        setShowBackend(false);
-      };
+    const [isAdmin, setIsAdmin] = useState(()=>{ try{ const r=localStorage.getItem(LS_AUTH); if(!r) return false; const {exp}=JSON.parse(r); return exp&&Date.now()<exp; }catch(e){ return false; } });
+    const [showLogin, setShowLogin] = useState(false);
+    const [showBackend, setShowBackend] = useState(false);
+    const [loginPw, setLoginPw] = useState(""); const [loginError, setLoginError] = useState("");
 
-      // --- Config (persistent) ---
-      const [config, setConfig] = useState(() => {
-        try {
-          const saved = localStorage.getItem(LS_CONFIG);
-          if (saved) return JSON.parse(saved);
-        } catch (e) {}
-        return clone(FALLBACK_CONFIG);
-      });
-      useEffect(() => {
-        try { localStorage.setItem(LS_CONFIG, JSON.stringify(config)); } catch (e) {}
-      }, [config]);
+    const doLogin = async e => {
+      e.preventDefault();
+      const hash=await sha256Hex(loginPw);
+      if(hash===ADMIN_PASSWORD_HASH) { const exp=Date.now()+4*3600000; localStorage.setItem(LS_AUTH,JSON.stringify({exp})); setIsAdmin(true); setShowLogin(false); setShowBackend(true); setLoginPw(""); setLoginError(""); }
+      else { setLoginError(t.falschesPasswort); setLoginPw(""); }
+    };
+    const doLogout = () => { localStorage.removeItem(LS_AUTH); setIsAdmin(false); setShowBackend(false); };
 
-      // --- Country Factors (persistent) ---
-      const [countryFactors, setCountryFactors] = useState(() => {
-        try {
-          const saved = localStorage.getItem(LS_FACTORS);
-          if (saved) return JSON.parse(saved);
-        } catch (e) {}
-        return clone(FALLBACK_COUNTRY_FACTORS);
-      });
-      useEffect(() => {
-        try { localStorage.setItem(LS_FACTORS, JSON.stringify(countryFactors)); } catch (e) {}
-      }, [countryFactors]);
+    const [config, setConfig] = useState(()=>{ try{ const s=localStorage.getItem(LS_CONFIG); if(s) return JSON.parse(s); }catch(e){} return clone(FALLBACK_CONFIG); });
+    useEffect(()=>{ try{ localStorage.setItem(LS_CONFIG,JSON.stringify(config)); }catch(e){} },[config]);
+    const [countryFactors, setCountryFactors] = useState(()=>{ try{ const s=localStorage.getItem(LS_FACTORS); if(s) return JSON.parse(s); }catch(e){} return clone(FALLBACK_COUNTRY_FACTORS); });
+    useEffect(()=>{ try{ localStorage.setItem(LS_FACTORS,JSON.stringify(countryFactors)); }catch(e){} },[countryFactors]);
+    const resetAll = ()=>{ if(confirm(t.confirmReset)){ setConfig(clone(FALLBACK_CONFIG)); setCountryFactors(clone(FALLBACK_COUNTRY_FACTORS)); } };
 
-      const resetAll = () => {
-        if (confirm(t.confirmReset)) {
-          setConfig(clone(FALLBACK_CONFIG));
-          setCountryFactors(clone(FALLBACK_COUNTRY_FACTORS));
-        }
-      };
+    const idx = useMemo(()=>indexConfig(config),[config]);
+    const flatSystemKeys = Object.keys(idx.flat);
+    const flatSystemKeysVisible = flatSystemKeys.filter(s=>!s.endsWith(" alpine"));
 
-      // --- Indexed config for UI ---
-      const idx = useMemo(() => indexConfig(config), [config]);
-      const flatSystemKeys = Object.keys(idx.flat);
+    const [category, setCategory] = useState("Flat");
+    const [flatSystem, setFlatSystem] = useState(flatSystemKeys[0]||"SN2");
+    const [flatKlemmung, setFlatKlemmung] = useState("KSK");
+    const [flatAusrichtung, setFlatAusrichtung] = useState("Süd");
+    const [pitchSystem, setPitchSystem] = useState(idx.pitch[0]?.system||"XM-F");
+    useEffect(()=>{ const sys=idx.flat[flatSystem]; if(!sys) return; if(!sys.klemmungen.includes(flatKlemmung)) setFlatKlemmung(sys.klemmungen[0]); if(!sys.ausrichtungen.includes(flatAusrichtung)) setFlatAusrichtung(sys.ausrichtungen[0]); },[flatSystem,idx]);
 
-      // --- Input State ---
-      const [category, setCategory] = useState("Flat"); // Flat | Pitch | METAL | GROUND
-      const [flatSystem, setFlatSystem] = useState(flatSystemKeys[0] || "SN2");
-      const [flatKlemmung, setFlatKlemmung] = useState("KSK");
-      const [flatAusrichtung, setFlatAusrichtung] = useState("Süd");
-      const [pitchSystem, setPitchSystem] = useState(idx.pitch[0]?.system || "XM-F");
+    const [windLoad, setWindLoad] = useState(0.5);
+    const [snowLoad, setSnowLoad] = useState(1.0);
+    const [country, setCountry] = useState("DE");
+    const [modulePower, setModulePower] = useState(450);
+    const [moduleCount, setModuleCount] = useState(100);
+    const [discount, setDiscount] = useState(0);
+    const [alpine, setAlpine] = useState(false);
 
-      // Sync Klemmung/Ausrichtung mit verfügbaren Optionen
-      useEffect(() => {
-        const sys = idx.flat[flatSystem];
-        if (!sys) return;
-        if (!sys.klemmungen.includes(flatKlemmung)) setFlatKlemmung(sys.klemmungen[0]);
-        if (!sys.ausrichtungen.includes(flatAusrichtung)) setFlatAusrichtung(sys.ausrichtungen[0]);
-      }, [flatSystem, idx]);
+    const hasAlpineVariant = sys=>!!idx.flat[`${sys} alpine`];
 
-      const [windLoad, setWindLoad] = useState(0.5);
-      const [snowLoad, setSnowLoad] = useState(1.0);
-      const [country, setCountry] = useState("DE");
-      const [modulePower, setModulePower] = useState(450);
-      const [moduleCount, setModuleCount] = useState(100);
-      const [discount, setDiscount] = useState(0);
-      const [alpine, setAlpine] = useState(false);
+    const result = useMemo(()=>{
+      let sysName,ausrichtung,klemmung;
+      if(category==="Flat") { sysName=(alpine&&hasAlpineVariant(flatSystem))?`${flatSystem} alpine`:flatSystem; ausrichtung=flatAusrichtung; klemmung=flatKlemmung; }
+      else if(category==="Pitch") { sysName=pitchSystem; ausrichtung="—"; klemmung="—"; }
+      const effectiveSchnee=category==="Flat"?0.1:snowLoad;
+      const r=richtpreisProKwp({ kategorie:category, system:sysName, ausrichtung, klemmung, wind:windLoad, schnee:effectiveSchnee, config, t });
+      if(r.preis==null) return { ...r, totalKwp:(moduleCount*modulePower)/1000 };
+      const cF=countryFactors[country]??1.0, dF=1-(discount/100);
+      const pricePerKwp=r.preis*cF*dF, totalKwp=(moduleCount*modulePower)/1000;
+      return { ...r, basePricePerKwp:r.preis, countryFactor:cF, discountFactor:dF, pricePerKwp, pricePerModule:pricePerKwp*(modulePower/1000), totalCost:pricePerKwp*totalKwp, totalKwp, systemDisplay:category==="Flat"?`${sysName} · ${klemmung} · ${ausrichtung}`:sysName };
+    },[category,flatSystem,flatKlemmung,flatAusrichtung,pitchSystem,alpine,windLoad,snowLoad,country,modulePower,moduleCount,discount,config,countryFactors,lang]);
 
-      // Welche FLAT-Systeme haben eine alpine-Variante?
-      const hasAlpineVariant = (sys) => !!idx.flat[`${sys} alpine`];
-      // System-Dropdown ohne " alpine"-Einträge
-      const flatSystemKeysVisible = flatSystemKeys.filter((s) => !s.endsWith(" alpine"));
+    const animKwp = useAnimatedNumber(result.totalKwp||0);
+    const animPriceKwp = useAnimatedNumber(result.pricePerKwp||0);
+    const animTotal = useAnimatedNumber(result.totalCost||0);
 
-      // --- Berechnung ---
-      const result = useMemo(() => {
-        let sysName, ausrichtung, klemmung;
-        if (category === "Flat") {
-          sysName = (alpine && hasAlpineVariant(flatSystem)) ? `${flatSystem} alpine` : flatSystem;
-          ausrichtung = flatAusrichtung;
-          klemmung = flatKlemmung;
-        } else if (category === "Pitch") {
-          sysName = pitchSystem;
-          ausrichtung = "—";
-          klemmung = "—";
-        }
+    const fmt2 = n=>new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 
-        // Für FLAT ist Schnee fix 0.1
-        const effectiveSchnee = category === "Flat" ? 0.1 : snowLoad;
+    const [jsonDraft,setJsonDraft]=useState(""); const [jsonError,setJsonError]=useState(""); const [jsonSuccess,setJsonSuccess]=useState("");
+    const exportConfig=()=>{ setJsonDraft(JSON.stringify(config,null,2)); setJsonError(""); setJsonSuccess(""); };
+    const importConfig=()=>{ try{ const p=JSON.parse(jsonDraft); if(!p.models||typeof p.models!=="object") throw new Error(t.expectModels); setConfig(p); setJsonError(""); setJsonSuccess(t.modelleImportiert(Object.keys(p.models).length)); }catch(err){ setJsonError(t.jsonError+" "+err.message); setJsonSuccess(""); } };
 
-        const r = richtpreisProKwp({
-          kategorie: category,
-          system: sysName,
-          ausrichtung,
-          klemmung,
-          wind: windLoad,
-          schnee: effectiveSchnee,
-          config,
-          t,
-        });
+    const currentFlatSys=idx.flat[flatSystem];
+    const currentModel=result.meta?.m;
 
-        if (r.preis == null) {
-          return { ...r, totalKwp: (moduleCount * modulePower) / 1000 };
-        }
+    const CATS = [
+      { id:"Flat",   label:t.flat,   sub:t.flatSub,   req:false },
+      { id:"Pitch",  label:t.pitch,  sub:t.pitchSub,  req:false },
+      { id:"METAL",  label:t.metal,  sub:t.metalSub,  req:true  },
+      { id:"GROUND", label:t.ground, sub:t.groundSub, req:true  },
+    ];
 
-        // Kommerzielle Multiplikatoren
-        const countryFactor = countryFactors[country] ?? 1.0;
-        const discountFactor = 1 - (discount / 100);
+    return (
+      <div style={{ minHeight:'100vh' }}>
 
-        const pricePerKwp = r.preis * countryFactor * discountFactor;
-        const totalKwp = (moduleCount * modulePower) / 1000;
-        const totalCost = pricePerKwp * totalKwp;
-        const pricePerModule = pricePerKwp * (modulePower / 1000);
-
-        return {
-          ...r,
-          basePricePerKwp: r.preis,
-          countryFactor,
-          discountFactor,
-          pricePerKwp,
-          pricePerModule,
-          totalCost,
-          totalKwp,
-          systemDisplay: category === "Flat"
-            ? `${sysName} · ${klemmung} · ${ausrichtung}`
-            : sysName,
-        };
-      }, [
-        category, flatSystem, flatKlemmung, flatAusrichtung, pitchSystem, alpine,
-        windLoad, snowLoad, country, modulePower, moduleCount, discount,
-        config, countryFactors, lang,
-      ]);
-
-      // Format
-      const fmtEur = (n) => new Intl.NumberFormat("de-DE", {
-        minimumFractionDigits: 2, maximumFractionDigits: 2,
-      }).format(n);
-      const fmtNum = (n) => new Intl.NumberFormat("de-DE", {
-        minimumFractionDigits: 2, maximumFractionDigits: 2,
-      }).format(n);
-
-      // --- Backend: JSON-Import ---
-      const [jsonDraft, setJsonDraft] = useState("");
-      const [jsonError, setJsonError] = useState("");
-      const [jsonSuccess, setJsonSuccess] = useState("");
-
-      const exportConfig = () => {
-        setJsonDraft(JSON.stringify(config, null, 2));
-        setJsonError("");
-        setJsonSuccess("");
-      };
-      const importConfig = () => {
-        try {
-          const parsed = JSON.parse(jsonDraft);
-          if (!parsed.models || typeof parsed.models !== "object") {
-            throw new Error(t.expectModels);
-          }
-          setConfig(parsed);
-          setJsonError("");
-          setJsonSuccess(t.modelleImportiert(Object.keys(parsed.models).length));
-        } catch (err) {
-          setJsonError(t.jsonError + " " + err.message);
-          setJsonSuccess("");
-        }
-      };
-
-      // ===================================================================
-      // RENDER
-      // ===================================================================
-      const currentFlatSys = idx.flat[flatSystem];
-      const currentModel = result.meta?.m;
-
-      return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-[#5CE1E6] selection:text-black pb-12">
-          {/* Header */}
-          <header className="bg-[#0A0A0A] border-b border-gray-800 shadow-sm py-6 px-4 sm:px-8">
-            <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-4">
-                <img src="logo.png" alt="AEROCOMPACT" className="h-8 w-auto logo-invert" />
-                <div className="hidden md:block h-8 w-px bg-gray-800"></div>
-                <span className="hidden md:inline text-sm uppercase tracking-[0.2em] text-gray-400 font-light">
-                  {t.title}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {/* Language Switcher */}
-                <div className="inline-flex border border-gray-800">
-                  {["de", "en", "it"].map((code) => (
-                    <button
-                      key={code}
-                      onClick={() => setLang(code)}
-                      className={`px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
-                        lang === code
-                          ? "bg-[#5CE1E6] text-black"
-                          : "text-gray-500 hover:text-white"
-                      } ${code !== "de" ? "border-l border-gray-800" : ""}`}
-                    >
-                      {code}
-                    </button>
-                  ))}
-                </div>
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={() => setShowBackend((s) => !s)}
-                      className={`flex items-center gap-2 px-3 py-2 border text-sm font-semibold uppercase tracking-wider transition-colors ${
-                        showBackend
-                          ? "border-[#5CE1E6] text-black bg-[#5CE1E6]"
-                          : "border-gray-700 text-gray-400 hover:border-[#5CE1E6] hover:text-[#5CE1E6]"
-                      }`}
-                    >
-                      <Icon name="settings" size={16} /> {t.backend}
-                    </button>
-                    <button
-                      onClick={doLogout}
-                      className="flex items-center gap-2 px-3 py-2 border border-gray-700 text-gray-400 hover:border-red-500 hover:text-red-500 text-sm font-semibold uppercase tracking-wider"
-                      title="Admin-Logout"
-                    >
-                      <Icon name="log-out" size={16} />
-                    </button>
-                  </>
-                )}
-              </div>
+        {/* ── HEADER ── */}
+        <header className="hdr">
+          <div className="hdr-inner">
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <img src="logo.png" alt="AEROCOMPACT" style={{ height:20, filter:'invert(1) brightness(1.1)' }}/>
+              <div style={{ width:1, height:18, background:'var(--border)' }}/>
+              <span style={{ fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.18em', color:'var(--text3)' }}>{t.title}</span>
             </div>
-          </header>
-
-          {/* Floating Login Button */}
-          {!isAdmin && (
-            <button
-              onClick={() => { setShowLogin(true); setLoginError(""); }}
-              aria-label="Admin-Login"
-              className="fixed bottom-6 right-6 z-40 w-10 h-10 flex items-center justify-center text-gray-700 hover:text-[#5CE1E6] transition-all duration-300 opacity-40 hover:opacity-100 hover:scale-110"
-              title="Admin-Login"
-            >
-              <Icon name="lock" size={16} />
-            </button>
-          )}
-
-          {/* Login Modal */}
-          {showLogin && !isAdmin && (
-            <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setShowLogin(false)}
-            >
-              <form
-                onClick={(e) => e.stopPropagation()}
-                onSubmit={doLogin}
-                className="bg-[#0A0A0A] border border-[#5CE1E6]/40 p-8 max-w-sm w-full"
-                style={{ boxShadow: "0 0 40px rgba(92, 225, 230, 0.15)" }}
-              >
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
-                  <Icon name="lock" size={20} className="text-[#5CE1E6]" />
-                  <h3 className="text-lg font-bold uppercase tracking-wider">{t.adminLogin}</h3>
-                </div>
-                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t.passwort}</label>
-                <input
-                  type="password"
-                  autoFocus
-                  value={loginPw}
-                  onChange={(e) => setLoginPw(e.target.value)}
-                  className="w-full p-3 bg-black border border-gray-700 text-white focus:border-[#5CE1E6] outline-none mb-2"
-                />
-                {loginError && <p className="text-xs text-red-400 mb-2">{loginError}</p>}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => { setShowLogin(false); setLoginPw(""); setLoginError(""); }}
-                    className="flex-1 p-3 border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 uppercase text-sm tracking-wider"
-                  >
-                    {t.abbrechen}
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 p-3 bg-[#5CE1E6] text-black font-bold uppercase text-sm tracking-wider hover:bg-[#5CE1E6]/90"
-                  >
-                    {t.loginBtn}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-600 mt-4 text-center">{t.sessionHinweis}</p>
-              </form>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              {["de","en","it"].map(code=>(
+                <button key={code} className={`lang-btn${lang===code?' active':''}`} onClick={()=>setLang(code)}>{code}</button>
+              ))}
+              {isAdmin && (<>
+                <div style={{ width:1, height:16, background:'var(--border)', margin:'0 2px' }}/>
+                <button className="btn btn-ghost" onClick={()=>setShowBackend(s=>!s)}
+                  style={{ padding:'5px 10px', fontSize:10, gap:4, background:showBackend?'var(--surface2)':undefined, borderColor:showBackend?'var(--border2)':undefined }}>
+                  <Icon name="settings" size={12}/> {t.backend}
+                </button>
+                <button className="btn btn-ghost" onClick={doLogout} style={{ padding:'5px 8px' }} title="Logout">
+                  <Icon name="log-out" size={12}/>
+                </button>
+              </>)}
             </div>
-          )}
+          </div>
+        </header>
 
-          {/* Backend Panel */}
-          {isAdmin && showBackend && (
-            <section className="bg-[#0A0A0A] border-b border-[#5CE1E6]/30 px-4 sm:px-8 py-6">
-              <div className="max-w-6xl mx-auto">
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                  <h2 className="text-lg font-bold uppercase tracking-wider text-[#5CE1E6] flex items-center gap-2">
-                    <Icon name="database" size={18} /> {t.backendTitle}
-                  </h2>
-                  <button
-                    onClick={resetAll}
-                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#5CE1E6] uppercase tracking-wider"
-                  >
-                    <Icon name="rotate-ccw" size={14} /> {t.zuruecksetzen}
-                  </button>
+        {/* ── BACKEND ── */}
+        {isAdmin && showBackend && (
+          <section style={{ borderBottom:'1px solid var(--border)', background:'var(--bg2)', padding:'24px 32px' }}>
+            <div style={{ maxWidth:1200, margin:'0 auto' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+                <div className="sec-hdr">
+                  <Icon name="database" size={13} style={{ color:'var(--text3)' }}/>
+                  {t.backendTitle}
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* JSON Import */}
-                  <div className="bg-black border border-gray-800 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-white">{t.modellKonfig}</p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={exportConfig}
-                          className="text-xs px-2 py-1 border border-gray-700 text-gray-400 hover:text-[#5CE1E6] hover:border-[#5CE1E6] flex items-center gap-1"
-                        >
-                          <Icon name="download" size={12} /> {t.aktuellLaden}
-                        </button>
-                        <button
-                          onClick={importConfig}
-                          disabled={!jsonDraft}
-                          className="text-xs px-2 py-1 border border-[#5CE1E6] text-black bg-[#5CE1E6] disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 font-semibold"
-                        >
-                          <Icon name="upload" size={12} /> {t.importieren}
-                        </button>
-                      </div>
+                <button className="btn btn-ghost" onClick={resetAll} style={{ fontSize:10, gap:4 }}>
+                  <Icon name="rotate-ccw" size={11}/> {t.zuruecksetzen}
+                </button>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div className="card" style={{ padding:20 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                    <span style={{ fontSize:11, fontWeight:600, color:'var(--text2)' }}>{t.modellKonfig}</span>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button className="btn btn-ghost" onClick={exportConfig} style={{ fontSize:10, padding:'4px 9px', gap:3 }}><Icon name="download" size={11}/> {t.aktuellLaden}</button>
+                      <button className="btn btn-primary" onClick={importConfig} disabled={!jsonDraft} style={{ fontSize:10, padding:'4px 9px', gap:3 }}><Icon name="upload" size={11}/> {t.importieren}</button>
                     </div>
-                    <textarea
-                      value={jsonDraft}
-                      onChange={(e) => { setJsonDraft(e.target.value); setJsonError(""); setJsonSuccess(""); }}
-                      placeholder={t.jsonPlaceholder}
-                      className="w-full h-64 p-2 bg-[#0a0a0a] border border-gray-700 text-gray-300 text-xs font-mono outline-none focus:border-[#5CE1E6] resize-none"
-                    />
-                    {jsonError && <p className="text-xs text-red-400 mt-2">{jsonError}</p>}
-                    {jsonSuccess && <p className="text-xs text-green-400 mt-2">{jsonSuccess}</p>}
-                    <p className="text-[10px] text-gray-600 mt-2 font-mono">
-                      {config.meta?.stand || "—"} · {Object.keys(config.models).length} {t.modelleAktiv}
-                    </p>
+                  </div>
+                  <textarea value={jsonDraft} onChange={e=>{setJsonDraft(e.target.value);setJsonError("");setJsonSuccess("");}} placeholder={t.jsonPlaceholder} style={{ height:150 }}/>
+                  {jsonError && <p style={{ color:'var(--err)', fontSize:11, marginTop:6 }}>{jsonError}</p>}
+                  {jsonSuccess && <p style={{ color:'oklch(70% 0.15 145)', fontSize:11, marginTop:6 }}>{jsonSuccess}</p>}
+                  <p style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)', marginTop:8 }}>{config.meta?.stand||"—"} · {Object.keys(config.models).length} {t.modelleAktiv}</p>
+                </div>
+                <div className="card" style={{ padding:20 }}>
+                  <p style={{ fontSize:11, fontWeight:600, color:'var(--text2)', marginBottom:14 }}>{t.laenderfaktoren}</p>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr>
+                      <th style={{ fontSize:10, color:'var(--text3)', textAlign:'left', paddingBottom:8, textTransform:'uppercase', letterSpacing:'0.08em' }}>{t.land}</th>
+                      <th style={{ fontSize:10, color:'var(--text3)', textAlign:'right', paddingBottom:8, textTransform:'uppercase', letterSpacing:'0.08em' }}>Faktor</th>
+                    </tr></thead>
+                    <tbody>{Object.entries(countryFactors).map(([code,val])=>(
+                      <tr key={code} style={{ borderTop:'1px solid var(--border)' }}>
+                        <td style={{ padding:'7px 0', fontSize:12, color:'var(--text2)' }}>{code}</td>
+                        <td style={{ padding:'7px 0', textAlign:'right' }}>
+                          <input type="number" step="0.01" className="num-inp" style={{ width:80, fontSize:13 }} value={val} onChange={e=>setCountryFactors({...countryFactors,[code]:parseFloat(e.target.value)||0})}/>
+                        </td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                  <p style={{ fontSize:10, color:'var(--text3)', marginTop:10, fontFamily:'var(--mono)' }}>{t.laenderfaktorenSub}</p>
+                </div>
+              </div>
+              {currentModel && (
+                <div className="card" style={{ padding:20, marginTop:14 }}>
+                  <p style={{ fontSize:11, fontWeight:600, color:'var(--text2)', marginBottom:12 }}>
+                    {t.aktuellesModell} <span style={{ color:'var(--cyan)', fontFamily:'var(--mono)' }}>{result.systemDisplay}</span>
+                  </p>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+                    {[
+                      [t.modelltyp, currentModel.type],
+                      [t.windRange, currentModel.wind_range?`[${currentModel.wind_range}]`:"—"],
+                      [t.snowRange, currentModel.snow_range?`[${currentModel.snow_range}]`:t.fixSnow],
+                      ["R²", currentModel.r_squared??currentModel.wind_r_squared??"—"],
+                      [t.anfrageWind, currentModel.wind_anfrage_threshold!=null?`≥ ${currentModel.wind_anfrage_threshold}`:"—"],
+                      [t.anfrageSchnee, currentModel.snow_anfrage_threshold!=null?`≥ ${currentModel.snow_anfrage_threshold}`:"—"],
+                      ["RMSE", currentModel.rmse??"—"],
+                      [t.datenpunkte, currentModel.n_data_points??"—"],
+                    ].map(([k,v])=>(
+                      <div key={k}>
+                        <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:12, color:'var(--text2)', fontFamily:'var(--mono)' }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── MAIN ── */}
+        <div className="main-inner" style={{ maxWidth:1200, margin:'0 auto', padding:'36px 32px 80px' }}>
+          <div className="main-cols" style={{ display:'flex', alignItems:'flex-start' }}>
+
+            {/* ── LEFT COL ── */}
+            <div className="left-col" style={{ flex:'0 0 57%', paddingRight:36, borderRight:'1px solid var(--border)' }}>
+              <div className="card">
+
+                {/* Section 1: Mounting System */}
+                <div style={{ padding:'24px 24px 20px' }}>
+                  <div className="sec-hdr" style={{ marginBottom:16 }}>
+                    <Icon name="layers" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.montagesystem}
                   </div>
 
-                  {/* Country Factors */}
-                  <div className="bg-black border border-gray-800 p-4">
-                    <p className="text-sm font-semibold text-white mb-3">{t.laenderfaktoren}</p>
-                    <table className="w-full">
-                      <thead>
-                        <tr>
-                          <th className="text-[10px] text-gray-500 uppercase text-left pb-1">{t.land}</th>
-                          <th className="text-[10px] text-gray-500 uppercase text-right pb-1">{lang === "it" ? "Fattore" : lang === "en" ? "Factor" : "Faktor"}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(countryFactors).map(([code, val]) => (
-                          <tr key={code} className="border-t border-gray-800">
-                            <td className="py-2 text-xs text-gray-400">{code}</td>
-                            <td className="py-2 text-right">
-                              <input
-                                type="number" step="0.01"
-                                className="w-24 p-1 bg-black border border-gray-700 text-[#5CE1E6] text-xs text-right focus:border-[#5CE1E6] outline-none"
-                                value={val}
-                                onChange={(e) => setCountryFactors({
-                                  ...countryFactors,
-                                  [code]: parseFloat(e.target.value) || 0
-                                })}
-                              />
-                            </td>
-                          </tr>
+                  {/* Category tabs */}
+                  <div className="cat-tabs">
+                    {CATS.map(cat=>(
+                      <button key={cat.id} className={`cat-tab${category===cat.id?' cat-tab-active':''}`} onClick={()=>setCategory(cat.id)}>
+                        <span className="cat-tab-name">
+                          {cat.label}
+                          {cat.req && <span className="cat-req-dot"/>}
+                        </span>
+                        <span className="cat-tab-sub">{cat.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Flat detail */}
+                  {category==="Flat" && (
+                    <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                      <div>
+                        <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                          {flatSystemKeysVisible.map(s=>(
+                            <button key={s} className={`chip${flatSystem===s?' active':''}`} onClick={()=>setFlatSystem(s)}>{s}</button>
+                          ))}
+                        </div>
+                      </div>
+                      {hasAlpineVariant(flatSystem) && (
+                        <div className={`toggle-wrap${alpine?' on':''}`} onClick={()=>setAlpine(a=>!a)}>
+                          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <Icon name="mountain-snow" size={14} style={{ color:alpine?'var(--cyan)':'var(--text3)' }}/>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:600, color:alpine?'var(--text)':'var(--text2)' }}>{t.alpineLabel}</div>
+                              <div style={{ fontSize:11, color:'var(--text3)' }}>{t.alpineSub}</div>
+                            </div>
+                          </div>
+                          <div className="toggle-track" style={{ background:alpine?'var(--cyan)':'var(--border2)' }}>
+                            <div className="toggle-thumb" style={{ left:alpine?'18px':'2px', background:alpine?'oklch(12% 0.008 200)':'var(--text3)' }}/>
+                          </div>
+                        </div>
+                      )}
+                      {currentFlatSys && (
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                          <div>
+                            <div className="lbl" style={{ marginBottom:8 }}>{t.klemmung}</div>
+                            {currentFlatSys.klemmungen.length>1
+                              ? <Segmented value={flatKlemmung} onChange={setFlatKlemmung} options={["KSK","LSK"].map(k=>({ value:k, label:k==="KSK"?t.ksk:t.lsk, disabled:!currentFlatSys.klemmungen.includes(k) }))}/>
+                              : <div style={{ padding:'8px 11px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.klemmungen[0]==="KSK"?t.ksk:currentFlatSys.klemmungen[0]==="LSK"?t.lsk:currentFlatSys.klemmungen[0]}</div>
+                            }
+                          </div>
+                          <div>
+                            <div className="lbl" style={{ marginBottom:8 }}>{t.ausrichtung}</div>
+                            {currentFlatSys.ausrichtungen.length>1
+                              ? <Segmented value={flatAusrichtung} onChange={setFlatAusrichtung} options={["Ost/West","Süd"].map(a=>({ value:a, label:a==="Ost/West"?t.ow:t.sued, disabled:!currentFlatSys.ausrichtungen.includes(a) }))}/>
+                              : <div style={{ padding:'8px 11px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.ausrichtungen[0]==="Ost/West"?t.ow:currentFlatSys.ausrichtungen[0]==="Süd"?t.sued:currentFlatSys.ausrichtungen[0]}</div>
+                            }
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pitch detail */}
+                  {category==="Pitch" && (
+                    <div className="fade-up">
+                      <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                        {idx.pitch.map(p=>(
+                          <button key={p.system} className={`chip${pitchSystem===p.system?' active':''}`} onClick={()=>setPitchSystem(p.system)}>{p.system}</button>
                         ))}
-                      </tbody>
-                    </table>
-                    <p className="text-[10px] text-gray-600 mt-3 font-mono">
-                      {t.laenderfaktorenSub}
-                    </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Anfrage placeholder */}
+                  {(category==="METAL"||category==="GROUND") && (
+                    <div className="fade-up" style={{ paddingTop:2 }}>
+                      <p style={{ fontSize:13, fontWeight:600, color:'var(--text2)', marginBottom:5 }}>{PLACEHOLDER_CATEGORIES[category].label}</p>
+                      <p style={{ fontSize:12, color:'var(--text3)', marginBottom:10, lineHeight:1.5 }}>{t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}</p>
+                      <span className="badge badge-warn"><Icon name="mail" size={10}/> {t.bitteVertriebAnfragen}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 2: Location & Loads */}
+                <div style={{ padding:'20px 24px', borderTop:'1px solid var(--border)' }}>
+                  <div className="sec-hdr" style={{ marginBottom:18 }}>
+                    <Icon name="map-pin" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.standortLasten}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.land}</div>
+                      <select className="inp" value={country} onChange={e=>setCountry(e.target.value)}>
+                        {Object.keys(countryFactors).map(c=>(
+                          <option key={c} value={c}>{t.countries[c]||c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <SliderField label={t.windlast} value={windLoad} min={0.1} max={3} step={0.1} onChange={setWindLoad} unit="kN/m²" iconName="wind"/>
+                    {category==="Pitch" && (
+                      <SliderField label={t.schneelast} value={snowLoad} min={0.1} max={4} step={0.1} onChange={setSnowLoad} unit="kN/m²" iconName="snowflake"/>
+                    )}
+                    {category==="Flat" && (
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:7, padding:'9px 11px', borderRadius:'var(--rad-sm)', background:'var(--bg2)', border:'1px solid var(--border)' }}>
+                        <Icon name="info" size={12} style={{ color:'var(--text3)', flexShrink:0, marginTop:1 }}/>
+                        <span style={{ fontSize:12, color:'var(--text3)', fontStyle:'italic', lineHeight:1.5 }}>{t.flatHinweis}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Modell-Statistik (aktuelle Auswahl) */}
-                {currentModel && (
-                  <div className="mt-4 bg-black border border-gray-800 p-4">
-                    <p className="text-sm font-semibold text-white mb-3">
-                      {t.aktuellesModell} <span className="text-[#5CE1E6]">{result.systemDisplay}</span>
-                    </p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.modelltyp}</span>
-                        <span className="text-gray-300">{currentModel.type}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.windRange}</span>
-                        <span className="text-gray-300">
-                          {currentModel.wind_range ? `[${currentModel.wind_range[0]}, ${currentModel.wind_range[1]}]` : "—"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.snowRange}</span>
-                        <span className="text-gray-300">
-                          {currentModel.snow_range ? `[${currentModel.snow_range[0]}, ${currentModel.snow_range[1]}]` : t.fixSnow}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">R²</span>
-                        <span className="text-gray-300">
-                          {currentModel.r_squared ?? currentModel.wind_r_squared ?? "—"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.anfrageWind}</span>
-                        <span className="text-gray-300">
-                          {currentModel.wind_anfrage_threshold != null ? `≥ ${currentModel.wind_anfrage_threshold}` : "—"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.anfrageSchnee}</span>
-                        <span className="text-gray-300">
-                          {currentModel.snow_anfrage_threshold != null ? `≥ ${currentModel.snow_anfrage_threshold}` : "—"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">RMSE</span>
-                        <span className="text-gray-300">{currentModel.rmse ?? "—"}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">{t.datenpunkte}</span>
-                        <span className="text-gray-300">{currentModel.n_data_points ?? "—"}</span>
-                      </div>
+                {/* Section 3: Module & Terms */}
+                <div style={{ padding:'20px 24px 24px', borderTop:'1px solid var(--border)' }}>
+                  <div className="sec-hdr" style={{ marginBottom:18 }}>
+                    <Icon name="zap" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.modulKonditionen}
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.leistung}</div>
+                      <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{config.meta?.modul||"—"}</div>
+                    </div>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.anzahlModule}</div>
+                      <input type="number" className="inp num-inp" value={moduleCount} onChange={e=>setModuleCount(Number(e.target.value))} style={{ textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', fontVariantNumeric:'tabular-nums' }}>{fmt2(result.totalKwp||0)} kWp</div>
+                    </div>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.rabatt}</div>
+                      <input type="number" min="0" max="100" className="inp num-inp" value={discount} onChange={e=>setDiscount(Number(e.target.value))} style={{ color:discount>0?'var(--cyan)':'var(--text)', textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5 }}>&nbsp;</div>
                     </div>
                   </div>
-                )}
+                </div>
+
               </div>
-            </section>
-          )}
+            </div>
 
-          <main className="max-w-6xl mx-auto mt-8 px-4 sm:px-8 grid grid-cols-1 md:grid-cols-12 gap-8">
-            {/* ---------------- Input ---------------- */}
-            <div className="md:col-span-7 space-y-6">
-              {/* System Auswahl */}
-              <div className="bg-[#111111] p-6 rounded-none border border-gray-800 shadow-lg">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-gray-800 pb-4">
-                  <Icon name="layers" size={20} className="text-[#5CE1E6]" /> {t.montagesystem}
-                </h2>
+            {/* ── RIGHT COL ── */}
+            <div className="right-col" style={{ flex:1, position:'sticky', top:64, paddingLeft:36, display:'flex', flexDirection:'column', gap:14 }}>
 
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">{t.systemKategorie}</label>
-                    <select
-                      className="w-full p-3 border border-gray-700 rounded-none bg-black text-white focus:ring-1 focus:ring-[#5CE1E6] focus:border-[#5CE1E6] outline-none"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                    >
-                      <option value="Flat">{t.flat}</option>
-                      <option value="Pitch">{t.pitch}</option>
-                      <option value="METAL">{t.metal}</option>
-                      <option value="GROUND">{t.ground}</option>
-                    </select>
-                  </div>
+              {/* Result card */}
+              <div className="card" style={{ borderTop:'2px solid var(--cyan)', borderRadius:'var(--rad)' }}>
+                <div style={{ padding:'24px' }}>
 
-                  <div className="p-4 bg-black/50 border border-gray-800 space-y-4">
-                    {category === "Flat" && (
-                      <>
-                        <div>
-                          <label className="block text-xs text-gray-400 mb-1 uppercase tracking-wider">{t.system}</label>
-                          <select
-                            className="w-full p-2 border border-gray-700 bg-black text-white outline-none focus:border-[#5CE1E6]"
-                            value={flatSystem}
-                            onChange={(e) => setFlatSystem(e.target.value)}
-                          >
-                            {flatSystemKeysVisible.map((s) => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                          {hasAlpineVariant(flatSystem) && (
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={alpine}
-                              onClick={() => setAlpine((a) => !a)}
-                              className={`mt-3 group flex items-center justify-between w-full px-3 py-2.5 border transition-all ${
-                                alpine
-                                  ? "border-[#5CE1E6]/60 bg-[#5CE1E6]/5"
-                                  : "border-gray-800 bg-black/40 hover:border-gray-600"
-                              }`}
-                            >
-                              <span className="flex items-center gap-2.5">
-                                <Icon
-                                  name="mountain-snow"
-                                  size={16}
-                                  className={alpine ? "text-[#5CE1E6]" : "text-gray-600 group-hover:text-gray-400"}
-                                />
-                                <span className="flex flex-col items-start">
-                                  <span className={`text-xs font-semibold uppercase tracking-wider ${alpine ? "text-white" : "text-gray-400"}`}>
-                                    {t.alpineLabel}
-                                  </span>
-                                  <span className="text-[10px] text-gray-600 normal-case tracking-normal">
-                                    {t.alpineSub}
-                                  </span>
-                                </span>
-                              </span>
-                              <span
-                                className={`relative inline-flex h-5 w-9 flex-shrink-0 border transition-colors ${
-                                  alpine ? "bg-[#5CE1E6] border-[#5CE1E6]" : "bg-black border-gray-700"
-                                }`}
-                              >
-                                <span
-                                  className={`absolute top-0.5 h-3.5 w-3.5 transition-all ${
-                                    alpine ? "left-[18px] bg-black" : "left-0.5 bg-gray-500"
-                                  }`}
-                                />
-                              </span>
-                            </button>
+                  {/* On-request / unknown state */}
+                  {(result.status==="anfrage"||result.status==="unbekannt") && (
+                    <div className="fade-up">
+                      <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', color:result.status==="anfrage"?'var(--amber)':'var(--err)', marginBottom:12 }}>
+                        {result.status==="anfrage" ? t.preisAufAnfrage : t.modellNichtVerfuegbar}
+                      </div>
+                      {(result.meta?.grund||result.meta?.reason) && (
+                        <p style={{ fontSize:12, color:'var(--text2)', fontFamily:'var(--mono)', marginBottom:6 }}>
+                          {result.meta?.grund||result.meta?.reason}
+                        </p>
+                      )}
+                      <p style={{ fontSize:12, color:'var(--text3)', fontStyle:'italic', marginBottom:20 }}>{t.bitteVertriebAnfragen}</p>
+                      <div style={{ borderTop:'1px solid var(--border)', paddingTop:16 }}>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.totalKwp}</div>
+                        <div style={{ fontFamily:'var(--mono)', fontSize:24, fontWeight:500, color:'var(--text2)', fontVariantNumeric:'tabular-nums' }}>
+                          {fmt2(result.totalKwp||0)} kWp
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Normal result */}
+                  {result.preis!=null && (
+                    <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+                      {result.status==="extrapoliert" && (
+                        <div className="badge badge-warn" style={{ alignSelf:'flex-start' }}>
+                          <Icon name="alert-triangle" size={10}/> {t.extrapoliert}
+                        </div>
+                      )}
+
+                      {/* Primary: €/kWp */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:9 }}>{t.kostenProKwp}</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:7 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:48, fontWeight:600, color:'var(--cyan)', lineHeight:1, letterSpacing:'-0.025em', fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(animPriceKwp)}
+                          </span>
+                          <span style={{ fontSize:13, color:'var(--text3)', fontFamily:'var(--mono)' }}>€/kWp</span>
+                        </div>
+                      </div>
+
+                      <div style={{ height:1, background:'var(--border)' }}/>
+
+                      {/* Per module */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.kostenProModul} · {moduleCount} {t.moduleLabel}</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:28, fontWeight:500, color:'var(--text)', lineHeight:1, fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(result.pricePerModule)}
+                          </span>
+                          <span style={{ fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)' }}>€</span>
+                        </div>
+                      </div>
+
+                      <div style={{ height:1, background:'var(--border)' }}/>
+
+                      {/* Total */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.gesamtkosten} · {fmt2(animKwp)} kWp</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:28, fontWeight:500, color:'var(--text)', lineHeight:1, fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(animTotal)}
+                          </span>
+                          <span style={{ fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)' }}>€</span>
+                        </div>
+                      </div>
+
+                      {/* Breakdown */}
+                      {(result.countryFactor!==1||result.discountFactor!==1) && (
+                        <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
+                          <div className="bk-row">
+                            <span style={{ color:'var(--text3)' }}>{t.modellpreis}</span>
+                            <span style={{ color:'var(--text2)' }}>€ {fmt2(result.basePricePerKwp)}/kWp</span>
+                          </div>
+                          {result.countryFactor!==1 && (
+                            <div className="bk-row">
+                              <span style={{ color:'var(--text3)' }}>{t.laenderfaktor} {country}</span>
+                              <span style={{ color:'var(--text2)' }}>× {result.countryFactor.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {result.discountFactor!==1 && (
+                            <div className="bk-row">
+                              <span style={{ color:'var(--text3)' }}>{t.rabattLine}</span>
+                              <span style={{ color:'var(--cyan)' }}>−{discount}%</span>
+                            </div>
                           )}
                         </div>
-
-                        {currentFlatSys && (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t.klemmung}</label>
-                              {currentFlatSys.klemmungen.length > 1 ? (
-                                <Segmented
-                                  value={flatKlemmung}
-                                  onChange={setFlatKlemmung}
-                                  options={["KSK", "LSK"].map(k => ({
-                                    value: k,
-                                    label: k === "KSK" ? t.ksk : t.lsk,
-                                    disabled: !currentFlatSys.klemmungen.includes(k)
-                                  }))}
-                                />
-                              ) : (
-                                <div className="px-3 py-2 border border-gray-800 text-gray-500 text-xs uppercase tracking-wider">
-                                  {currentFlatSys.klemmungen[0] === "KSK" ? t.ksk : currentFlatSys.klemmungen[0] === "LSK" ? t.lsk : currentFlatSys.klemmungen[0]}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">{t.ausrichtung}</label>
-                              {currentFlatSys.ausrichtungen.length > 1 ? (
-                                <Segmented
-                                  value={flatAusrichtung}
-                                  onChange={setFlatAusrichtung}
-                                  options={["Ost/West", "Süd"].map(a => ({
-                                    value: a, label: a === "Ost/West" ? t.ow : t.sued,
-                                    disabled: !currentFlatSys.ausrichtungen.includes(a)
-                                  }))}
-                                />
-                              ) : (
-                                <div className="px-3 py-2 border border-gray-800 text-gray-500 text-xs uppercase tracking-wider">
-                                  {currentFlatSys.ausrichtungen[0] === "Ost/West" ? t.ow : currentFlatSys.ausrichtungen[0] === "Süd" ? t.sued : currentFlatSys.ausrichtungen[0]}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {category === "Pitch" && (
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase tracking-wider">{t.system}</label>
-                        <select
-                          className="w-full p-2 border border-gray-700 bg-black text-white outline-none focus:border-[#5CE1E6]"
-                          value={pitchSystem}
-                          onChange={(e) => setPitchSystem(e.target.value)}
-                        >
-                          {idx.pitch.map((p) => (
-                            <option key={p.system} value={p.system}>{p.system}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    {(category === "METAL" || category === "GROUND") && (
-                      <div className="text-center py-4">
-                        <Icon name="info" size={20} className="text-gray-600 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400 font-medium">
-                          {PLACEHOLDER_CATEGORIES[category].label}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}
-                        </p>
-                        <p className="text-xs text-[#5CE1E6] mt-2 italic">{t.bitteVertriebAnfragen}</p>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Standort & Lasten */}
-              <div className="bg-[#111111] p-6 rounded-none border border-gray-800 shadow-lg">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-gray-800 pb-4">
-                  <Icon name="map-pin" size={20} className="text-[#5CE1E6]" /> {t.standortLasten}
-                </h2>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                      <Icon name="globe" size={16} className="text-gray-500" /> {t.land}
-                    </label>
-                    <select
-                      className="w-full p-3 border border-gray-700 rounded-none bg-black text-white focus:ring-1 focus:ring-[#5CE1E6] outline-none"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                    >
-                      {Object.keys(countryFactors).map((c) => (
-                        <option key={c} value={c}>
-                          {t.countries[c] || c}
-                          {" "}({countryFactors[c].toFixed(2)}×)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-6 border border-gray-800 bg-[#151515] p-5">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-300 mb-3 flex justify-between items-center">
-                        <span className="flex items-center gap-2"><Icon name="wind" size={16} className="text-[#5CE1E6]" /> {t.windlast}</span>
-                        <span className="text-[#5CE1E6] font-bold bg-[#5CE1E6]/10 px-2 py-1 rounded-none border border-[#5CE1E6]/30">
-                          {windLoad.toFixed(1)} kN/m²
-                        </span>
-                      </label>
-                      <input
-                        type="range" min="0.1" max="3" step="0.1"
-                        value={windLoad}
-                        onChange={(e) => setWindLoad(Number(e.target.value))}
-                        className="w-full accent-[#5CE1E6] h-1 bg-gray-700 appearance-none cursor-pointer"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500 mt-2 font-mono">
-                        <span>0.1</span><span>3.0</span>
-                      </div>
-                    </div>
-
-                    {/* Schneelast: nur PITCH */}
-                    {category === "Pitch" && (
-                      <div className="pt-2 border-t border-gray-800">
-                        <label className="text-sm font-semibold text-gray-300 mb-3 mt-2 flex justify-between items-center">
-                          <span className="flex items-center gap-2"><Icon name="snowflake" size={16} className="text-[#5CE1E6]" /> {t.schneelast}</span>
-                          <span className="text-[#5CE1E6] font-bold bg-[#5CE1E6]/10 px-2 py-1 rounded-none border border-[#5CE1E6]/30">
-                            {snowLoad.toFixed(1)} kN/m²
-                          </span>
-                        </label>
-                        <input
-                          type="range" min="0.1" max="4" step="0.1"
-                          value={snowLoad}
-                          onChange={(e) => setSnowLoad(Number(e.target.value))}
-                          className="w-full accent-[#5CE1E6] h-1 bg-gray-700 appearance-none cursor-pointer"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-2 font-mono">
-                          <span>0.1</span><span>4.0</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {category === "Flat" && (
-                      <div className="pt-2 border-t border-gray-800">
-                        <p className="text-xs text-gray-500 italic flex items-center gap-2">
-                          <Icon name="info" size={12} />
-                          {t.flatHinweis}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* Disclaimer */}
+              <div style={{ padding:'12px 14px', borderRadius:'var(--rad-sm)', border:'1px solid var(--border)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text3)', marginBottom:4 }}>{t.disclaimerTitle}</div>
+                <p style={{ fontSize:11, color:'var(--text3)', lineHeight:1.55 }}>{t.disclaimerBody} {config.meta?.stand||"—"}.</p>
               </div>
 
             </div>
-
-            {/* ---------------- Output ---------------- */}
-            <div className="md:col-span-5 space-y-6">
-              <div className="bg-[#111111] border border-[#5CE1E6]/30 text-white p-6 rounded-none shadow-2xl">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-gray-800 pb-4">
-                  <Icon name="calculator" size={20} className="text-[#5CE1E6]" /> {t.output}
-                </h2>
-
-                {/* Anfrage / Unbekannt */}
-                {(result.status === "anfrage" || result.status === "unbekannt") && (
-                  <div className={`p-6 rounded-none border-l-4 ${
-                    result.status === "anfrage"
-                      ? "bg-[#5CE1E6]/5 border-[#5CE1E6]"
-                      : "bg-red-950/30 border-red-500"
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      <Icon
-                        name={result.status === "anfrage" ? "phone" : "alert-triangle"}
-                        size={24}
-                        className={result.status === "anfrage" ? "text-[#5CE1E6]" : "text-red-400"}
-                      />
-                      <div>
-                        <p className="text-lg font-bold">
-                          {result.status === "anfrage" ? t.preisAufAnfrage : t.modellNichtVerfuegbar}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {result.meta?.grund || result.meta?.reason}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Normales Ergebnis */}
-                {result.preis != null && (
-                  <div className="space-y-5">
-                    {/* Status Badge */}
-                    {result.status === "extrapoliert" && (
-                      <div className="bg-yellow-500/10 border border-yellow-500/40 p-3 text-xs">
-                        <div className="flex items-start gap-2">
-                          <Icon name="alert-triangle" size={14} className="text-yellow-400 mt-0.5" />
-                          <div>
-                            <p className="text-yellow-300 font-semibold uppercase tracking-wider">{t.extrapoliert}</p>
-                            <p className="text-yellow-200/70 mt-1">
-                              {result.meta?.ausserhalb?.join(" · ")}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Hero: €/kWp */}
-                    <div className="bg-black p-5 rounded-none border-l-4 border-[#5CE1E6]">
-                      <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-1">{t.kostenProKwp}</p>
-                      <div className="flex justify-between items-end">
-                        <span className="text-4xl font-light text-[#5CE1E6]">€ {fmtEur(result.pricePerKwp)}</span>
-                        <span className="text-sm text-gray-500">/ kWp</span>
-                      </div>
-                    </div>
-
-                    {/* Gesamtkosten */}
-                    <div className="p-5 bg-black border border-[#5CE1E6]/40">
-                      <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider font-semibold">
-                        {t.gesamtkostenBei} {fmtNum(result.totalKwp)} kWp
-                      </p>
-                      <div className="flex justify-between items-end">
-                        <span className="text-3xl font-light text-white">€ {fmtEur(result.totalCost)}</span>
-                        <span className="text-sm text-gray-500">{moduleCount} {t.moduleLabel}</span>
-                      </div>
-                    </div>
-
-                    {/* €/Modul (abgeleitet) */}
-                    <div className="p-4 bg-black/50 border border-gray-800">
-                      <div className="flex justify-between items-center">
-                        <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">{t.kostenProModul}</p>
-                        <span className="text-lg font-light text-gray-300">€ {fmtEur(result.pricePerModule)}</span>
-                      </div>
-                    </div>
-
-                    {/* Aufschlüsselung (nur wenn Multiplikatoren ≠ 1) */}
-                    {(result.countryFactor !== 1 || result.discountFactor !== 1) && (
-                      <div className="p-3 bg-black/30 border border-dashed border-gray-800 text-[11px] font-mono space-y-1">
-                        <div className="flex justify-between text-gray-500">
-                          <span>{t.modellpreis}</span>
-                          <span className="text-gray-300">€ {fmtEur(result.basePricePerKwp)} /kWp</span>
-                        </div>
-                        {result.countryFactor !== 1 && (
-                          <div className="flex justify-between text-gray-500">
-                            <span>{t.laenderfaktor} {country}:</span>
-                            <span className="text-gray-300">{result.countryFactor.toFixed(2)}</span>
-                          </div>
-                        )}
-                        {result.discountFactor !== 1 && (
-                          <div className="flex justify-between text-gray-500">
-                            <span>{t.rabattLine}</span>
-                            <span className="text-gray-300">{discount}%</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Disclaimer */}
-                <div className="mt-8 pt-6 border-t border-gray-800">
-                  <p className="text-xs text-gray-500 font-bold uppercase mb-1">{t.disclaimerTitle}</p>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {t.disclaimerBody} {config.meta?.stand || "—"}.
-                  </p>
-                </div>
-              </div>
-
-              {/* Modul & Konditionen */}
-              <div className="bg-[#111111] p-6 rounded-none border border-gray-800 shadow-lg">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-gray-800 pb-4">
-                  <Icon name="sun" size={20} className="text-[#5CE1E6]" /> {t.modulKonditionen}
-                </h2>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">{t.leistung}</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Icon name="zap" size={16} className="text-gray-500" />
-                      </div>
-                      <input
-                        type="number"
-                        className="w-full pl-10 p-3 border border-gray-700 rounded-none bg-black text-white focus:ring-1 focus:ring-[#5CE1E6] outline-none"
-                        value={modulePower}
-                        onChange={(e) => setModulePower(Number(e.target.value))}
-                      />
-                    </div>
-                    <p className="text-[10px] text-gray-600 mt-1 font-mono">
-                      {t.referenzmodul}: {config.meta?.modul || "—"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">{t.anzahlModule}</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Icon name="layers" size={16} className="text-gray-500" />
-                      </div>
-                      <input
-                        type="number"
-                        className="w-full pl-10 p-3 border border-gray-700 rounded-none bg-black text-white focus:ring-1 focus:ring-[#5CE1E6] outline-none"
-                        value={moduleCount}
-                        onChange={(e) => setModuleCount(Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">{t.rabatt}</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Icon name="tag" size={16} className="text-gray-500" />
-                      </div>
-                      <input
-                        type="number" min="0" max="100"
-                        className="w-full pl-10 p-3 border border-gray-700 rounded-none bg-black text-[#5CE1E6] font-bold focus:ring-1 focus:ring-[#5CE1E6] outline-none"
-                        value={discount}
-                        onChange={(e) => setDiscount(Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
+          </div>
         </div>
-      );
-    }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<AerocompactCalculator />);
-  </script>
+        {/* ── LOGIN BUTTON ── */}
+        {!isAdmin && (
+          <button onClick={()=>{setShowLogin(true);setLoginError("");}}
+            style={{ position:'fixed', bottom:24, right:24, zIndex:40, width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--surface)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.3, transition:'opacity 0.2s' }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.3'} title="Admin">
+            <Icon name="lock" size={12} style={{ color:'var(--text2)' }}/>
+          </button>
+        )}
+
+        {/* ── LOGIN MODAL ── */}
+        {showLogin && !isAdmin && (
+          <div style={{ position:'fixed', inset:0, background:'oklch(0% 0 0 / 0.8)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+            onClick={()=>setShowLogin(false)}>
+            <form onSubmit={doLogin} onClick={e=>e.stopPropagation()}
+              style={{ background:'var(--surface)', border:'1px solid var(--border2)', borderRadius:'var(--rad)', padding:32, width:'100%', maxWidth:340 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20, paddingBottom:16, borderBottom:'1px solid var(--border)' }}>
+                <Icon name="lock" size={14} style={{ color:'var(--text3)' }}/>
+                <span style={{ fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text2)' }}>{t.adminLogin}</span>
+              </div>
+              <div className="lbl" style={{ marginBottom:7 }}>{t.passwort}</div>
+              <input type="password" autoFocus value={loginPw} onChange={e=>setLoginPw(e.target.value)} className="inp" style={{ marginBottom:loginError?6:0 }}/>
+              {loginError && <p style={{ color:'var(--err)', fontSize:12, marginTop:6 }}>{loginError}</p>}
+              <div style={{ display:'flex', gap:8, marginTop:18 }}>
+                <button type="button" className="btn btn-ghost" style={{ flex:1 }} onClick={()=>{setShowLogin(false);setLoginPw("");setLoginError("");}}>{t.abbrechen}</button>
+                <button type="submit" className="btn btn-primary" style={{ flex:1 }}>{t.loginBtn}</button>
+              </div>
+              <p style={{ fontSize:11, color:'var(--text3)', textAlign:'center', marginTop:12 }}>{t.sessionHinweis}</p>
+            </form>
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<AerocompactCalculator/>);
+</script>
 </body>
 </html>
