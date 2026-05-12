@@ -377,11 +377,133 @@
   const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.00, CH:1.00, OTHER:0.95 };
   const LS_CONFIG="aerocompact-config-v6", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
+  // ── LASTERMITTLUNG – DEUTSCHLAND (DIN EN 1991-1-3/4) ─────────
+  // PLZ-Leitregion (2 Stellen) → [Windzone 1-4, Schneezone]
+  // Näherungswerte – Zonengrenzen folgen keinen PLZ-Grenzen exakt.
+  const DE_PLZ_ZONES = (()=>{
+    const z={};
+    // Sachsen / Ostthüringen / Erzgebirge (WZ1, SZ2)
+    ["01","02","07","08","09"].forEach(k=>z[k]=[1,"2"]);
+    // Leipzig Tiefland / Halle (WZ2, SZ1)
+    ["04","06"].forEach(k=>z[k]=[2,"1"]);
+    // Cottbus / Niederlausitz
+    z["03"]=[2,"1"];
+    // Berlin
+    ["10","12","13"].forEach(k=>z[k]=[2,"1"]);
+    // Potsdam / Brandenburg
+    ["14","15","16"].forEach(k=>z[k]=[2,"1"]);
+    // Mecklenburg-Vorpommern Küste (WZ3)
+    ["17","18"].forEach(k=>z[k]=[3,"1"]);
+    // Schwerin (inland)
+    z["19"]=[2,"1"];
+    // Hamburg Kerngebiet (WZ3)
+    ["20","22"].forEach(k=>z[k]=[3,"1"]);
+    // Hamburg Umland (etwas abgeschirmt)
+    z["21"]=[2,"1"];
+    // Lübeck
+    z["23"]=[2,"1"];
+    // Kiel / Schleswig-Holstein West (WZ3)
+    ["24","25"].forEach(k=>z[k]=[3,"1"]);
+    // Oldenburg / Wilhelmshaven / Bremerhaven – Nordseeküste
+    ["26","27"].forEach(k=>z[k]=[3,"1"]);
+    // Bremen
+    z["28"]=[3,"1"];
+    // Lüneburg / Heide
+    z["29"]=[2,"1"];
+    // Hannover / Braunschweig / Magdeburg
+    ["30","31","32","38","39"].forEach(k=>z[k]=[2,"1"]);
+    // Paderborn
+    z["33"]=[2,"1"];
+    // Kassel (Bergland)
+    z["34"]=[1,"2"];
+    // Marburg
+    z["35"]=[1,"1"];
+    // Fulda / Rhön
+    z["36"]=[1,"2"];
+    // Göttingen (hügelig)
+    z["37"]=[1,"2"];
+    // Düsseldorf / Mönchengladbach / Ruhrgebiet / Münster
+    ["40","41","44","45","46","47","48","49"].forEach(k=>z[k]=[2,"1"]);
+    // Wuppertal (Bergisch, geschützt)
+    z["42"]=[1,"1"];
+    // Köln / Aachen / Bonn
+    ["50","52","53"].forEach(k=>z[k]=[1,"1"]);
+    // Bergisches Land
+    z["51"]=[1,"2"];
+    // Trier / Mainz / Koblenz
+    ["54","55","56"].forEach(k=>z[k]=[1,"1"]);
+    // Siegen / Sauerland (WZ1, SZ2)
+    ["57","58"].forEach(k=>z[k]=[1,"2"]);
+    // Hamm
+    z["59"]=[2,"1"];
+    // Frankfurt / Wiesbaden
+    ["60","61","63","64","65"].forEach(k=>z[k]=[1,"1"]);
+    // Saarland
+    z["66"]=[1,"1"];
+    // Kaiserslautern / Pfälzerwald
+    z["67"]=[1,"2"];
+    // Mannheim / Heidelberg
+    ["68","69"].forEach(k=>z[k]=[1,"1"]);
+    // Stuttgart (Talkessel)
+    z["70"]=[1,"1"];
+    // Reutlingen / Göppingen / Sigmaringen
+    ["71","72","73"].forEach(k=>z[k]=[1,"2"]);
+    // Heilbronn / Pforzheim / Karlsruhe
+    ["74","75","76"].forEach(k=>z[k]=[1,"1"]);
+    // Offenburg / Schwarzwald West
+    z["77"]=[1,"2"];
+    // Villingen / Konstanz / Bodensee
+    z["78"]=[1,"2"];
+    // Freiburg / Südschwarzwald (SZ3 – Feldberg!)
+    z["79"]=[1,"3"];
+    // München
+    ["80","81"].forEach(k=>z[k]=[1,"2"]);
+    // Oberbayern / Voralpen
+    z["82"]=[1,"2"];
+    // Rosenheim / Traunstein (Voralpen, erhöhte Schneelast)
+    z["83"]=[1,"2a"];
+    // Landshut / Ingolstadt / Augsburg
+    ["84","85","86"].forEach(k=>z[k]=[1,"2"]);
+    // Kempten / Allgäu (Alpin! SZ3)
+    z["87"]=[1,"3"];
+    // Ravensburg / Immenstadt (Allgäu / Oberschwaben)
+    z["88"]=[1,"3"];
+    // Ulm / Neu-Ulm
+    z["89"]=[1,"2"];
+    // Nürnberg / Ansbach / Amberg / Regensburg / Passau / Bayreuth / Bamberg
+    ["90","91","92","93","94","95","96"].forEach(k=>z[k]=[1,"2"]);
+    // Würzburg (Maintal, milde Schneelast)
+    z["97"]=[1,"1"];
+    // Erfurt / Gotha / Eisenach (Thüringen)
+    ["98","99"].forEach(k=>z[k]=[1,"2"]);
+    return z;
+  })();
+
+  // qp(z) nach DIN EN 1991-1-4/NA — Geländekategorie I–IV, Höhe z in m
+  function deCalcWind(windzone, gk, z) {
+    const qb = {1:0.32, 2:0.39, 3:0.48, 4:0.56}[windzone] || 0.39;
+    const p  = {I:{z0:0.01,zmin:2}, II:{z0:0.05,zmin:4}, III:{z0:0.3,zmin:8}, IV:{z0:1.0,zmin:16}}[gk];
+    if(!p) return null;
+    const {z0,zmin}=p, kr=0.19*Math.pow(z0/0.05,0.07);
+    const lnZ=Math.log(Math.max(z,zmin)/z0);
+    return Math.round((1+7/lnZ)*kr*kr*lnZ*lnZ*qb*10)/10;
+  }
+
+  // sk nach DIN EN 1991-1-3/NA — Schneezone + Höhe ü. NN in m
+  function deCalcSchnee(sz, altNN) {
+    const t2=Math.pow((altNN+140)/760,2);
+    const sk=({
+      "1":  0.19+0.91*t2, "1a": 0.25+1.91*t2,
+      "2":  0.25+1.06*t2, "2a": 0.31+2.91*t2, "3": 0.31+2.91*t2,
+    }[sz]??(0.25+1.06*t2));
+    return Math.round(Math.max(sk,0.65)*10)/10;
+  }
+
   // ── I18N ───────────────────────────────────────────────────────
   const T = {
-    de:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R mit Blechersatzziegel", "XT-R":"XT-R" }, title:"Richtpreis-Rechner", montagesystem:"Montagesystem", systemKategorie:"System-Kategorie", flat:"CompactFLAT", flatSub:"Flachdach", pitch:"CompactPITCH", pitchSub:"Schrägdach", metal:"CompactMETAL", metalSub:"Blechdach", ground:"CompactGROUND", groundSub:"Freifläche", system:"System", klemmung:"Klemmung", ausrichtung:"Ausrichtung", ksk:"Kurze Seite", lsk:"Lange Seite", ow:"O/W", sued:"Süd", alpineLabel:"Alpine", alpineSub:"verstärkt für hohe Schneelasten", standortLasten:"Standort & Lasten", land:"Land", windlast:"Windlast", schneelast:"Schneelast", flatHinweis:"Schneelast ohne Einfluss bei Flachdachsystem", modulKonditionen:"Modul & Konditionen", leistung:"Leistung (Wp)", referenzmodul:"Referenzmodul", anzahlModule:"Anzahl Module", rabatt:"Kundenrabatt (%)", output:"Ergebnis", kostenProKwp:"Kosten pro kWp", gesamtkosten:"Gesamtkosten", moduleLabel:"Module", kostenProModul:"pro Modul", extrapoliert:"Extrapoliert", preisAufAnfrage:"Preis auf Anfrage", modellNichtVerfuegbar:"Modell nicht verfügbar", modellpreis:"Modellpreis", laenderfaktor:"Länderfaktor", rabattLine:"Rabatt", disclaimerTitle:"Alle Angaben ohne Gewähr", disclaimerBody:"Ersetzt keine statische Planung. Listenpreise je kWp, Stand", backendTitle:"Backend · Konfiguration", zuruecksetzen:"Zurücksetzen", modellKonfig:"Modell-Konfiguration (JSON)", aktuellLaden:"Laden", importieren:"Importieren", jsonPlaceholder:"JSON aus Regression-Skript hier einfügen…", laenderfaktoren:"Länderfaktoren", laenderfaktorenSub:"Multiplikativer Aufschlag auf €/kWp.", aktuellesModell:"Modell:", modelltyp:"Typ", windRange:"Wind-Range", snowRange:"Schnee-Range", anfrageWind:"Anfrage Wind", anfrageSchnee:"Anfrage Schnee", datenpunkte:"Datenpunkte", fixSnow:"fix 0.1", adminLogin:"Admin-Login", passwort:"Passwort", abbrechen:"Abbrechen", loginBtn:"Login", sessionHinweis:"Session läuft nach 4h ab.", falschesPasswort:"Falsches Passwort", datenInAktualisierung:"Daten in Aktualisierung", bitteVertriebAnfragen:"Bitte Vertrieb anfragen.", anfrageSenden:"Anfrage senden", anfrageMailSubject:(sys)=>`Richtpreis-Anfrage: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Sehr geehrtes Projektteam,\n\nbitte nehmen Sie Kontakt bezüglich folgender Konfiguration auf:\n\nSystem:       ${sys}\nWindlast:     ${w} kN/m²\nSchneelast:   ${s} kN/m²\nLand:         ${land}\nAnlage:       ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nHinweis: '+grund:''}\n\nMit freundlichen Grüßen`, kostenfunktionenFolgen:(s)=>`Kostenfunktionen für ${s} folgen.`, countries:{ DE:"Deutschland", AT:"Österreich", CH:"Schweiz", OTHER:"International" }, backend:"Backend", confirmReset:"Konfiguration und Faktoren auf Default zurücksetzen?", modelleImportiert:(n)=>`✓ ${n} Modelle importiert.`, jsonError:"JSON-Fehler:", expectModels:"Erwarte 'models' als Objekt.", modelleAktiv:"Modelle aktiv", totalKwp:"kWp gesamt", materialschaetzung:"Materialschätzung", materialHinweis:"Schätzwerte auf Basis der Referenzinstallation, linear skaliert auf die gewählte Modulanzahl. Mengen auf ganze Stücke gerundet.", colArtnr:"Art.-Nr.", colBez:"Bezeichnung", colAnzahl:"Anzahl", keineBomDaten:"Keine Schätzdaten für dieses System verfügbar." },
-    en:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R with Metal Tiles", "XT-R":"XT-R" }, title:"Price Calculator", montagesystem:"Mounting System", systemKategorie:"System Category", flat:"CompactFLAT", flatSub:"Flat Roof", pitch:"CompactPITCH", pitchSub:"Pitched Roof", metal:"CompactMETAL", metalSub:"Metal Roof", ground:"CompactGROUND", groundSub:"Ground-Mount", system:"System", klemmung:"Clamping", ausrichtung:"Orientation", ksk:"Short Side", lsk:"Long Side", ow:"E/W", sued:"South", alpineLabel:"Alpine", alpineSub:"reinforced for high snow loads", standortLasten:"Location & Loads", land:"Country", windlast:"Wind Load", schneelast:"Snow Load", flatHinweis:"Snow load has no effect for flat roof systems", modulKonditionen:"Module & Terms", leistung:"Power (Wp)", referenzmodul:"Reference module", anzahlModule:"Number of Modules", rabatt:"Customer Discount (%)", output:"Result", kostenProKwp:"Cost per kWp", gesamtkosten:"Total Cost", moduleLabel:"modules", kostenProModul:"per Module", extrapoliert:"Extrapolated", preisAufAnfrage:"Price on Request", modellNichtVerfuegbar:"Model not available", modellpreis:"Model price", laenderfaktor:"Country factor", rabattLine:"Discount", disclaimerTitle:"All data without guarantee", disclaimerBody:"Does not replace structural planning. List prices per kWp, as of", backendTitle:"Backend · Configuration", zuruecksetzen:"Reset", modellKonfig:"Model Configuration (JSON)", aktuellLaden:"Load", importieren:"Import", jsonPlaceholder:"Paste JSON from regression script here…", laenderfaktoren:"Country Factors", laenderfaktorenSub:"Multiplicative markup on €/kWp.", aktuellesModell:"Model:", modelltyp:"Type", windRange:"Wind range", snowRange:"Snow range", anfrageWind:"Wind threshold", anfrageSchnee:"Snow threshold", datenpunkte:"Data points", fixSnow:"fix 0.1", adminLogin:"Admin Login", passwort:"Password", abbrechen:"Cancel", loginBtn:"Login", sessionHinweis:"Session expires after 4h.", falschesPasswort:"Wrong password", datenInAktualisierung:"Data being updated", bitteVertriebAnfragen:"Please contact sales.", anfrageSenden:"Send Inquiry", anfrageMailSubject:(sys)=>`Price Inquiry: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Dear Project Team,\n\nPlease get in touch regarding the following configuration:\n\nSystem:       ${sys}\nWind load:    ${w} kN/m²\nSnow load:    ${s} kN/m²\nCountry:      ${land}\nInstallation: ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nNote: '+grund:''}\n\nBest regards`, kostenfunktionenFolgen:(s)=>`Cost functions for ${s} coming soon.`, countries:{ DE:"Germany", AT:"Austria", CH:"Switzerland", OTHER:"International" }, backend:"Backend", confirmReset:"Reset configuration and factors to default?", modelleImportiert:(n)=>`✓ ${n} models imported.`, jsonError:"JSON error:", expectModels:"Expected 'models' as object.", modelleAktiv:"models active", totalKwp:"kWp total", materialschaetzung:"Material Estimation", materialHinweis:"Estimated quantities based on reference installation, linearly scaled to the selected number of modules. Quantities rounded to whole pieces.", colArtnr:"Part No.", colBez:"Description", colAnzahl:"Qty", keineBomDaten:"No estimation data available for this system." },
-    it:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R con Tegole Metalliche", "XT-R":"XT-R" }, title:"Calcolatore Prezzi", montagesystem:"Sistema di Montaggio", systemKategorie:"Categoria Sistema", flat:"CompactFLAT", flatSub:"Tetto Piano", pitch:"CompactPITCH", pitchSub:"Tetto Inclinato", metal:"CompactMETAL", metalSub:"Lamiera", ground:"CompactGROUND", groundSub:"A Terra", system:"Sistema", klemmung:"Morsetto", ausrichtung:"Orientamento", ksk:"Lato Corto", lsk:"Lato Lungo", ow:"E/O", sued:"Sud", alpineLabel:"Alpine", alpineSub:"rinforzata per carichi neve elevati", standortLasten:"Luogo & Carichi", land:"Paese", windlast:"Carico Vento", schneelast:"Carico Neve", flatHinweis:"Il carico neve non influisce sui sistemi a tetto piano", modulKonditionen:"Modulo & Condizioni", leistung:"Potenza (Wp)", referenzmodul:"Modulo di riferimento", anzahlModule:"Numero Moduli", rabatt:"Sconto Cliente (%)", output:"Risultato", kostenProKwp:"Costo per kWp", gesamtkosten:"Costo Totale", moduleLabel:"moduli", kostenProModul:"per Modulo", extrapoliert:"Estrapolato", preisAufAnfrage:"Prezzo su Richiesta", modellNichtVerfuegbar:"Modello non disponibile", modellpreis:"Prezzo modello", laenderfaktor:"Fattore paese", rabattLine:"Sconto", disclaimerTitle:"Tutti i dati senza garanzia", disclaimerBody:"Non sostituisce la progettazione strutturale. Listini al kWp, aggiornato", backendTitle:"Backend · Configurazione", zuruecksetzen:"Reset", modellKonfig:"Configurazione Modelli (JSON)", aktuellLaden:"Carica", importieren:"Importa", jsonPlaceholder:"Incolla JSON dallo script di regressione qui…", laenderfaktoren:"Fattori paese", laenderfaktorenSub:"Si applicano moltiplicativamente al valore €/kWp.", aktuellesModell:"Modello:", modelltyp:"Tipo", windRange:"Range vento", snowRange:"Range neve", anfrageWind:"Soglia vento", anfrageSchnee:"Soglia neve", datenpunkte:"Punti dati", fixSnow:"fix 0.1", adminLogin:"Login Admin", passwort:"Password", abbrechen:"Annulla", loginBtn:"Accedi", sessionHinweis:"La sessione scade dopo 4h.", falschesPasswort:"Password errata", datenInAktualisierung:"Dati in aggiornamento", bitteVertriebAnfragen:"Contattare il commerciale.", anfrageSenden:"Invia Richiesta", anfrageMailSubject:(sys)=>`Richiesta Prezzo: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Gentile Team Progetti,\n\nSi prega di contattarci per la seguente configurazione:\n\nSistema:      ${sys}\nCarico vento: ${w} kN/m²\nCarico neve:  ${s} kN/m²\nPaese:        ${land}\nImpianto:     ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nNota: '+grund:''}\n\nCordiali saluti`, kostenfunktionenFolgen:(s)=>`Funzioni di costo per ${s} in arrivo.`, countries:{ DE:"Germania", AT:"Austria", CH:"Svizzera", OTHER:"Internazionale" }, backend:"Backend", confirmReset:"Ripristinare configurazione e fattori predefiniti?", modelleImportiert:(n)=>`✓ ${n} modelli importati.`, jsonError:"Errore JSON:", expectModels:"Atteso 'models' come oggetto.", modelleAktiv:"modelli attivi", totalKwp:"kWp totale", materialschaetzung:"Stima Materiali", materialHinweis:"Quantità stimate in base all'installazione di riferimento, in scala lineare rispetto al numero di moduli selezionato. Arrotondate a pezzi interi.", colArtnr:"Art.", colBez:"Descrizione", colAnzahl:"Qtà", keineBomDaten:"Nessun dato di stima disponibile per questo sistema." }
+    de:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R mit Blechersatzziegel", "XT-R":"XT-R" }, title:"Richtpreis-Rechner", montagesystem:"Montagesystem", systemKategorie:"System-Kategorie", flat:"CompactFLAT", flatSub:"Flachdach", pitch:"CompactPITCH", pitchSub:"Schrägdach", metal:"CompactMETAL", metalSub:"Blechdach", ground:"CompactGROUND", groundSub:"Freifläche", system:"System", klemmung:"Klemmung", ausrichtung:"Ausrichtung", ksk:"Kurze Seite", lsk:"Lange Seite", ow:"O/W", sued:"Süd", alpineLabel:"Alpine", alpineSub:"verstärkt für hohe Schneelasten", standortLasten:"Standort & Lasten", land:"Land", windlast:"Windlast", schneelast:"Schneelast", flatHinweis:"Schneelast ohne Einfluss bei Flachdachsystem", modulKonditionen:"Modul & Konditionen", leistung:"Leistung (Wp)", referenzmodul:"Referenzmodul", anzahlModule:"Anzahl Module", rabatt:"Kundenrabatt (%)", output:"Ergebnis", kostenProKwp:"Kosten pro kWp", gesamtkosten:"Gesamtkosten", moduleLabel:"Module", kostenProModul:"pro Modul", extrapoliert:"Extrapoliert", preisAufAnfrage:"Preis auf Anfrage", modellNichtVerfuegbar:"Modell nicht verfügbar", modellpreis:"Modellpreis", laenderfaktor:"Länderfaktor", rabattLine:"Rabatt", disclaimerTitle:"Alle Angaben ohne Gewähr", disclaimerBody:"Ersetzt keine statische Planung. Listenpreise je kWp, Stand", backendTitle:"Backend · Konfiguration", zuruecksetzen:"Zurücksetzen", modellKonfig:"Modell-Konfiguration (JSON)", aktuellLaden:"Laden", importieren:"Importieren", jsonPlaceholder:"JSON aus Regression-Skript hier einfügen…", laenderfaktoren:"Länderfaktoren", laenderfaktorenSub:"Multiplikativer Aufschlag auf €/kWp.", aktuellesModell:"Modell:", modelltyp:"Typ", windRange:"Wind-Range", snowRange:"Schnee-Range", anfrageWind:"Anfrage Wind", anfrageSchnee:"Anfrage Schnee", datenpunkte:"Datenpunkte", fixSnow:"fix 0.1", adminLogin:"Admin-Login", passwort:"Passwort", abbrechen:"Abbrechen", loginBtn:"Login", sessionHinweis:"Session läuft nach 4h ab.", falschesPasswort:"Falsches Passwort", datenInAktualisierung:"Daten in Aktualisierung", bitteVertriebAnfragen:"Bitte Vertrieb anfragen.", anfrageSenden:"Anfrage senden", anfrageMailSubject:(sys)=>`Richtpreis-Anfrage: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Sehr geehrtes Projektteam,\n\nbitte nehmen Sie Kontakt bezüglich folgender Konfiguration auf:\n\nSystem:       ${sys}\nWindlast:     ${w} kN/m²\nSchneelast:   ${s} kN/m²\nLand:         ${land}\nAnlage:       ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nHinweis: '+grund:''}\n\nMit freundlichen Grüßen`, kostenfunktionenFolgen:(s)=>`Kostenfunktionen für ${s} folgen.`, countries:{ DE:"Deutschland", AT:"Österreich", CH:"Schweiz", OTHER:"International" }, backend:"Backend", confirmReset:"Konfiguration und Faktoren auf Default zurücksetzen?", modelleImportiert:(n)=>`✓ ${n} Modelle importiert.`, jsonError:"JSON-Fehler:", expectModels:"Erwarte 'models' als Objekt.", modelleAktiv:"Modelle aktiv", totalKwp:"kWp gesamt", materialschaetzung:"Materialschätzung", materialHinweis:"Schätzwerte auf Basis der Referenzinstallation, linear skaliert auf die gewählte Modulanzahl. Mengen auf ganze Stücke gerundet.", colArtnr:"Art.-Nr.", colBez:"Bezeichnung", colAnzahl:"Anzahl", keineBomDaten:"Keine Schätzdaten für dieses System verfügbar.", lastenhilfe:"Lasten ermitteln (PLZ)", plzLabel:"PLZ", gelaendekategorieLabel:"Geländekategorie", gebHoeheLabel:"Geb.-Höhe (m)", hoeheNNLabel:"Höhe ü. NN (m)", uebernehmen:"Übernehmen", windzoneLabel:"Windzone", schneezoneLabel:"Schneezon.", plzUnbekannt:"PLZ-Region nicht erkannt.", lasthinweis:"Orientierungswert · DIN EN 1991 · Keine Statik", gkOptI:"I – Küste / Seeufer / Inseln", gkOptII:"II – Offenes Feld, Grünland", gkOptIII:"III – Vorortgelände, Waldrand", gkOptIV:"IV – Stadtgelände, Innenstadt" },
+    en:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R with Metal Tiles", "XT-R":"XT-R" }, title:"Price Calculator", montagesystem:"Mounting System", systemKategorie:"System Category", flat:"CompactFLAT", flatSub:"Flat Roof", pitch:"CompactPITCH", pitchSub:"Pitched Roof", metal:"CompactMETAL", metalSub:"Metal Roof", ground:"CompactGROUND", groundSub:"Ground-Mount", system:"System", klemmung:"Clamping", ausrichtung:"Orientation", ksk:"Short Side", lsk:"Long Side", ow:"E/W", sued:"South", alpineLabel:"Alpine", alpineSub:"reinforced for high snow loads", standortLasten:"Location & Loads", land:"Country", windlast:"Wind Load", schneelast:"Snow Load", flatHinweis:"Snow load has no effect for flat roof systems", modulKonditionen:"Module & Terms", leistung:"Power (Wp)", referenzmodul:"Reference module", anzahlModule:"Number of Modules", rabatt:"Customer Discount (%)", output:"Result", kostenProKwp:"Cost per kWp", gesamtkosten:"Total Cost", moduleLabel:"modules", kostenProModul:"per Module", extrapoliert:"Extrapolated", preisAufAnfrage:"Price on Request", modellNichtVerfuegbar:"Model not available", modellpreis:"Model price", laenderfaktor:"Country factor", rabattLine:"Discount", disclaimerTitle:"All data without guarantee", disclaimerBody:"Does not replace structural planning. List prices per kWp, as of", backendTitle:"Backend · Configuration", zuruecksetzen:"Reset", modellKonfig:"Model Configuration (JSON)", aktuellLaden:"Load", importieren:"Import", jsonPlaceholder:"Paste JSON from regression script here…", laenderfaktoren:"Country Factors", laenderfaktorenSub:"Multiplicative markup on €/kWp.", aktuellesModell:"Model:", modelltyp:"Type", windRange:"Wind range", snowRange:"Snow range", anfrageWind:"Wind threshold", anfrageSchnee:"Snow threshold", datenpunkte:"Data points", fixSnow:"fix 0.1", adminLogin:"Admin Login", passwort:"Password", abbrechen:"Cancel", loginBtn:"Login", sessionHinweis:"Session expires after 4h.", falschesPasswort:"Wrong password", datenInAktualisierung:"Data being updated", bitteVertriebAnfragen:"Please contact sales.", anfrageSenden:"Send Inquiry", anfrageMailSubject:(sys)=>`Price Inquiry: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Dear Project Team,\n\nPlease get in touch regarding the following configuration:\n\nSystem:       ${sys}\nWind load:    ${w} kN/m²\nSnow load:    ${s} kN/m²\nCountry:      ${land}\nInstallation: ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nNote: '+grund:''}\n\nBest regards`, kostenfunktionenFolgen:(s)=>`Cost functions for ${s} coming soon.`, countries:{ DE:"Germany", AT:"Austria", CH:"Switzerland", OTHER:"International" }, backend:"Backend", confirmReset:"Reset configuration and factors to default?", modelleImportiert:(n)=>`✓ ${n} models imported.`, jsonError:"JSON error:", expectModels:"Expected 'models' as object.", modelleAktiv:"models active", totalKwp:"kWp total", materialschaetzung:"Material Estimation", materialHinweis:"Estimated quantities based on reference installation, linearly scaled to the selected number of modules. Quantities rounded to whole pieces.", colArtnr:"Part No.", colBez:"Description", colAnzahl:"Qty", keineBomDaten:"No estimation data available for this system.", lastenhilfe:"Lookup Loads (Post Code)", plzLabel:"Post Code", gelaendekategorieLabel:"Terrain Category", gebHoeheLabel:"Building Ht. (m)", hoeheNNLabel:"Elevation (m a.s.l.)", uebernehmen:"Apply", windzoneLabel:"Wind Zone", schneezoneLabel:"Snow Zone", plzUnbekannt:"Post code region not found.", lasthinweis:"Indicative · EN 1991 · Not for structural use", gkOptI:"I – Coast / Lakeside / Islands", gkOptII:"II – Open field, Grassland", gkOptIII:"III – Suburban, Forest edge", gkOptIV:"IV – Urban, City centre" },
+    it:{ systemLabels:{ "XT-R mit Blechersatzziegel":"XT-R con Tegole Metalliche", "XT-R":"XT-R" }, title:"Calcolatore Prezzi", montagesystem:"Sistema di Montaggio", systemKategorie:"Categoria Sistema", flat:"CompactFLAT", flatSub:"Tetto Piano", pitch:"CompactPITCH", pitchSub:"Tetto Inclinato", metal:"CompactMETAL", metalSub:"Lamiera", ground:"CompactGROUND", groundSub:"A Terra", system:"Sistema", klemmung:"Morsetto", ausrichtung:"Orientamento", ksk:"Lato Corto", lsk:"Lato Lungo", ow:"E/O", sued:"Sud", alpineLabel:"Alpine", alpineSub:"rinforzata per carichi neve elevati", standortLasten:"Luogo & Carichi", land:"Paese", windlast:"Carico Vento", schneelast:"Carico Neve", flatHinweis:"Il carico neve non influisce sui sistemi a tetto piano", modulKonditionen:"Modulo & Condizioni", leistung:"Potenza (Wp)", referenzmodul:"Modulo di riferimento", anzahlModule:"Numero Moduli", rabatt:"Sconto Cliente (%)", output:"Risultato", kostenProKwp:"Costo per kWp", gesamtkosten:"Costo Totale", moduleLabel:"moduli", kostenProModul:"per Modulo", extrapoliert:"Estrapolato", preisAufAnfrage:"Prezzo su Richiesta", modellNichtVerfuegbar:"Modello non disponibile", modellpreis:"Prezzo modello", laenderfaktor:"Fattore paese", rabattLine:"Sconto", disclaimerTitle:"Tutti i dati senza garanzia", disclaimerBody:"Non sostituisce la progettazione strutturale. Listini al kWp, aggiornato", backendTitle:"Backend · Configurazione", zuruecksetzen:"Reset", modellKonfig:"Configurazione Modelli (JSON)", aktuellLaden:"Carica", importieren:"Importa", jsonPlaceholder:"Incolla JSON dallo script di regressione qui…", laenderfaktoren:"Fattori paese", laenderfaktorenSub:"Si applicano moltiplicativamente al valore €/kWp.", aktuellesModell:"Modello:", modelltyp:"Tipo", windRange:"Range vento", snowRange:"Range neve", anfrageWind:"Soglia vento", anfrageSchnee:"Soglia neve", datenpunkte:"Punti dati", fixSnow:"fix 0.1", adminLogin:"Login Admin", passwort:"Password", abbrechen:"Annulla", loginBtn:"Accedi", sessionHinweis:"La sessione scade dopo 4h.", falschesPasswort:"Password errata", datenInAktualisierung:"Dati in aggiornamento", bitteVertriebAnfragen:"Contattare il commerciale.", anfrageSenden:"Invia Richiesta", anfrageMailSubject:(sys)=>`Richiesta Prezzo: ${sys}`, anfrageMailBody:(sys,w,s,land,n,wp,kwp,grund)=>`Gentile Team Progetti,\n\nSi prega di contattarci per la seguente configurazione:\n\nSistema:      ${sys}\nCarico vento: ${w} kN/m²\nCarico neve:  ${s} kN/m²\nPaese:        ${land}\nImpianto:     ${n} × ${wp} Wp = ${kwp} kWp${grund?'\n\nNota: '+grund:''}\n\nCordiali saluti`, kostenfunktionenFolgen:(s)=>`Funzioni di costo per ${s} in arrivo.`, countries:{ DE:"Germania", AT:"Austria", CH:"Svizzera", OTHER:"Internazionale" }, backend:"Backend", confirmReset:"Ripristinare configurazione e fattori predefiniti?", modelleImportiert:(n)=>`✓ ${n} modelli importati.`, jsonError:"Errore JSON:", expectModels:"Atteso 'models' come oggetto.", modelleAktiv:"modelli attivi", totalKwp:"kWp totale", materialschaetzung:"Stima Materiali", materialHinweis:"Quantità stimate in base all'installazione di riferimento, in scala lineare rispetto al numero di moduli selezionato. Arrotondate a pezzi interi.", colArtnr:"Art.", colBez:"Descrizione", colAnzahl:"Qtà", keineBomDaten:"Nessun dato di stima disponibile per questo sistema.", lastenhilfe:"Ricerca Carichi (CAP)", plzLabel:"CAP", gelaendekategorieLabel:"Cat. Terreno", gebHoeheLabel:"Alt. Edificio (m)", hoeheNNLabel:"Altitudine (m s.l.m.)", uebernehmen:"Applica", windzoneLabel:"Zona Vento", schneezoneLabel:"Zona Neve", plzUnbekannt:"CAP non trovato nel database.", lasthinweis:"Indicativo · EN 1991 · Non sostituisce calc. strutturale", gkOptI:"I – Costa / Riva / Isole", gkOptII:"II – Campo aperto, Prati", gkOptIII:"III – Periferia, Bordo bosco", gkOptIV:"IV – Urbano, Centro città" }
   };
 
   // ── BOM ESTIMATE ───────────────────────────────────────────────
@@ -515,6 +637,121 @@
           <span style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--mono)' }}>{min}</span>
           <span style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--mono)' }}>{max}</span>
         </div>
+      </div>
+    );
+  };
+
+  // ── LASTEN-HELPER ─────────────────────────────────────────────
+  const LastenHelper = ({ country, onApply, t }) => {
+    const [open, setOpen] = useState(false);
+    const [plz, setPlz] = useState('');
+    const [gk, setGk] = useState('III');
+    const [gebHoehe, setGebHoehe] = useState(10);
+    const [hoeheNN, setHoeheNN] = useState(300);
+    const [result, setResult] = useState(null);
+    const [notFound, setNotFound] = useState(false);
+
+    useEffect(() => { setResult(null); setPlz(''); setNotFound(false); }, [country]);
+
+    useEffect(() => {
+      if (country !== 'DE' || plz.length < 2) { setResult(null); setNotFound(false); return; }
+      const z = DE_PLZ_ZONES[plz.substring(0,2)];
+      if (!z) { setResult(null); setNotFound(true); return; }
+      const [wz, sz] = z;
+      setResult({ wz, sz, wind: deCalcWind(wz, gk, gebHoehe), snow: deCalcSchnee(sz, hoeheNN) });
+      setNotFound(false);
+    }, [plz, gk, gebHoehe, hoeheNN, country]);
+
+    if (country !== 'DE') return null;
+
+    return (
+      <div>
+        <button onClick={() => setOpen(o => !o)} style={{
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          width:'100%', padding:'6px 10px', borderRadius:'var(--rad-sm)',
+          border:'1px solid var(--border)', background: open ? 'var(--surface2)' : 'transparent',
+          color:'var(--text3)', fontSize:12, fontWeight:500, cursor:'pointer',
+          fontFamily:'var(--sans)', transition:'all 0.12s'
+        }}>
+          <span style={{display:'flex',alignItems:'center',gap:5}}>
+            <Icon name="map-pin" size={12}/>{t.lastenhilfe}
+          </span>
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={12}/>
+        </button>
+
+        {open && (
+          <div className="fade-up" style={{
+            marginTop:8, padding:'13px 13px 11px', borderRadius:'var(--rad-sm)',
+            background:'var(--bg2)', border:'1px solid var(--border)',
+            display:'flex', flexDirection:'column', gap:9
+          }}>
+            <div style={{display:'grid', gridTemplateColumns:'90px 1fr', gap:8}}>
+              <div>
+                <div className="lbl" style={{marginBottom:4}}>{t.plzLabel}</div>
+                <input type="text" inputMode="numeric" maxLength={5} className="inp"
+                  placeholder="z.B. 80331" value={plz}
+                  onChange={e => setPlz(e.target.value.replace(/\D/g,''))}
+                />
+              </div>
+              <div>
+                <div className="lbl" style={{marginBottom:4}}>{t.gelaendekategorieLabel}</div>
+                <select className="inp" value={gk} onChange={e => setGk(e.target.value)}>
+                  <option value="I">{t.gkOptI}</option>
+                  <option value="II">{t.gkOptII}</option>
+                  <option value="III">{t.gkOptIII}</option>
+                  <option value="IV">{t.gkOptIV}</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
+              <div>
+                <div className="lbl" style={{marginBottom:4}}>{t.gebHoeheLabel}</div>
+                <input type="number" min={3} max={100} className="inp num-inp"
+                  value={gebHoehe} onChange={e => setGebHoehe(Math.max(3,Number(e.target.value)))}/>
+              </div>
+              <div>
+                <div className="lbl" style={{marginBottom:4}}>{t.hoeheNNLabel}</div>
+                <input type="number" min={0} max={3000} className="inp num-inp"
+                  value={hoeheNN} onChange={e => setHoeheNN(Math.max(0,Number(e.target.value)))}/>
+              </div>
+            </div>
+
+            {notFound && (
+              <p style={{fontSize:12, color:'var(--err)', margin:0}}>{t.plzUnbekannt}</p>
+            )}
+
+            {result && (
+              <div style={{
+                padding:'9px 11px', borderRadius:'var(--rad-sm)',
+                background:'var(--cyan-dim)', border:'1px solid var(--cyan-mid)'
+              }}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:8, flexWrap:'wrap'}}>
+                  <div style={{display:'flex', gap:12, flexWrap:'wrap'}}>
+                    <span style={{fontSize:12, color:'var(--text3)'}}>
+                      {t.windzoneLabel} <span style={{fontFamily:'var(--mono)', fontWeight:600, color:'var(--text)'}}>{result.wz}</span>
+                    </span>
+                    <span style={{fontSize:12, color:'var(--text3)'}}>
+                      {t.schneezoneLabel} <span style={{fontFamily:'var(--mono)', fontWeight:600, color:'var(--text)'}}>{result.sz}</span>
+                    </span>
+                    <span style={{fontSize:12, color:'var(--text3)'}}>
+                      Wind <span style={{fontFamily:'var(--mono)', fontWeight:600, color:'var(--cyan)'}}>{result.wind} kN/m²</span>
+                    </span>
+                    <span style={{fontSize:12, color:'var(--text3)'}}>
+                      Schnee <span style={{fontFamily:'var(--mono)', fontWeight:600, color:'var(--cyan)'}}>{result.snow} kN/m²</span>
+                    </span>
+                  </div>
+                  <button onClick={() => { onApply(result.wind, result.snow); setOpen(false); }} style={{
+                    padding:'5px 12px', borderRadius:'var(--rad-sm)', cursor:'pointer',
+                    background:'var(--cyan)', color:'var(--bg)', border:'none',
+                    fontSize:12, fontWeight:600, fontFamily:'var(--sans)', flexShrink:0
+                  }}>{t.uebernehmen}</button>
+                </div>
+                <p style={{fontSize:11, color:'var(--text3)', margin:'6px 0 0', fontStyle:'italic'}}>{t.lasthinweis}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -862,6 +1099,7 @@
                         ))}
                       </select>
                     </div>
+                    <LastenHelper country={country} onApply={(w,s)=>{setWindLoad(w);setSnowLoad(s);}} t={t}/>
                     <SliderField label={t.windlast} value={windLoad} min={0.1} max={3} step={0.1} onChange={setWindLoad} unit="kN/m²" iconName="wind"/>
                     {(category==="Pitch"||category==="Metal") && (
                       <SliderField label={t.schneelast} value={snowLoad} min={0.1} max={4} step={0.1} onChange={setSnowLoad} unit="kN/m²" iconName="snowflake"/>
