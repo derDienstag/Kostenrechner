@@ -21,9 +21,9 @@
       --border:    oklch(22%  0.006 200);
       --border2:   oklch(32%  0.006 200);
       /* text */
-      --text:      oklch(93%  0.004 200);
-      --text2:     oklch(74%  0.004 200);
-      --text3:     oklch(57%  0.005 200);
+      --text:      oklch(96%  0.003 200);
+      --text2:     oklch(84%  0.004 200);
+      --text3:     oklch(68%  0.005 200);
       /* accent */
       --cyan:      oklch(78%  0.13  195);
       --cyan-mid:  oklch(78%  0.13  195 / 0.18);
@@ -71,8 +71,8 @@
     /* ── Lang ───────────────────────────────────────────────────── */
     .lang-btn {
       padding: 4px 8px; border-radius: 5px;
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.08em;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
       border: 1px solid transparent; cursor: pointer;
       background: transparent; font-family: var(--sans);
       color: var(--text3); transition: all 0.12s;
@@ -90,9 +90,9 @@
     /* ── Section header ─────────────────────────────────────────── */
     .sec-hdr {
       display: flex; align-items: center; gap: 7px;
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.14em;
-      color: var(--text3);
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.10em;
+      color: var(--text2);
     }
 
     /* ── Category tabs ──────────────────────────────────────────── */
@@ -117,11 +117,11 @@
     .cat-tab:hover:not(.cat-tab-active) { background: var(--surface); }
     .cat-tab-active { background: var(--surface); }
     .cat-tab-name {
-      font-size: 12px; font-weight: 600; white-space: nowrap;
+      font-size: 13px; font-weight: 600; white-space: nowrap;
       color: var(--text2);
     }
     .cat-tab-active .cat-tab-name { color: var(--cyan); }
-    .cat-tab-sub { font-size: 10px; color: var(--text3); white-space: nowrap; }
+    .cat-tab-sub { font-size: 11px; color: var(--text3); white-space: nowrap; }
     .cat-req-dot {
       display: inline-block; width: 4px; height: 4px; border-radius: 50%;
       background: var(--amber); margin-left: 4px;
@@ -130,11 +130,11 @@
 
     /* ── Chips ──────────────────────────────────────────────────── */
     .chip {
-      padding: 5px 11px;
+      padding: 6px 12px;
       border: 1px solid var(--border);
       border-radius: var(--rad-sm);
       background: transparent; color: var(--text2);
-      font-family: var(--sans); font-size: 12px; font-weight: 500;
+      font-family: var(--sans); font-size: 13px; font-weight: 500;
       cursor: pointer; transition: all 0.12s; white-space: nowrap;
     }
     .chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
@@ -220,8 +220,8 @@
 
     /* ── Label ──────────────────────────────────────────────────── */
     .lbl {
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3);
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2);
     }
 
     /* ── Badges ─────────────────────────────────────────────────── */
@@ -254,7 +254,7 @@
     /* ── Breakdown rows ─────────────────────────────────────────── */
     .bk-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 6px 0; font-size: 11px; font-family: var(--mono);
+      padding: 6px 0; font-size: 12px; font-family: var(--mono);
       font-variant-numeric: tabular-nums;
     }
     .bk-row + .bk-row { border-top: 1px solid var(--border); }
@@ -452,7 +452,7 @@
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             <Icon name={iconName} size={13} style={{ color:'var(--text3)' }}/>
-            <span style={{ fontSize:13, fontWeight:500, color:'var(--text2)' }}>{label}</span>
+            <span style={{ fontSize:14, fontWeight:500, color:'var(--text2)' }}>{label}</span>
           </div>
           <div style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--cyan)', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', padding:'3px 9px', fontVariantNumeric:'tabular-nums' }}>
             {value.toFixed(1)} {unit}
@@ -463,8 +463,8 @@
           className="slider" style={{ background:bg }}
         />
         <div style={{ display:'flex', justifyContent:'space-between', marginTop:5 }}>
-          <span style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)' }}>{min}</span>
-          <span style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)' }}>{max}</span>
+          <span style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--mono)' }}>{min}</span>
+          <span style={{ fontSize:11, color:'var(--text3)', fontFamily:'var(--mono)' }}>{max}</span>
         </div>
       </div>
     );
@@ -820,12 +820,12 @@
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.leistung}</div>
                       <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{config.meta?.modul||"—"}</div>
+                      <div style={{ fontSize:11, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{config.meta?.modul||"—"}</div>
                     </div>
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.anzahlModule}</div>
                       <input type="number" className="inp num-inp" value={moduleCount} onChange={e=>setModuleCount(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', fontVariantNumeric:'tabular-nums' }}>{fmt2(result.totalKwp||0)} kWp</div>
+                      <div style={{ fontSize:11, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', fontVariantNumeric:'tabular-nums' }}>{fmt2(result.totalKwp||0)} kWp</div>
                     </div>
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.rabatt}</div>
