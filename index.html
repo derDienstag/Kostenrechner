@@ -283,12 +283,35 @@
 
     /* ── Responsive ─────────────────────────────────────────────── */
     @media (max-width: 800px) {
-      .main-cols { flex-direction: column !important; }
-      .left-col  { border-right: none !important; padding-right: 0 !important; }
-      .right-col { position: static !important; padding-left: 0 !important; }
-      .hdr-inner, .main-inner { padding-left: 16px !important; padding-right: 16px !important; }
+      /* Layout */
+      .main-cols {
+        flex-direction: column !important;
+        align-items: stretch !important; /* children fill full width */
+      }
+      .left-col  { border-right: none !important; padding-right: 0 !important; flex: none !important; }
+      .right-col { position: static !important; padding-left: 0 !important; flex: none !important; }
+
+      /* Spacing */
+      .hdr-inner { padding-left: 16px !important; padding-right: 16px !important; }
+      .main-inner { padding: 20px 16px 48px !important; }
+
+      /* Header: hide subtitle, compress lang buttons */
+      .hdr-title { display: none !important; }
+      .hdr-divider { display: none !important; }
+      .lang-btn { padding: 4px 6px !important; }
+
+      /* Category tabs: 2×2 grid */
       .cat-tabs  { flex-wrap: wrap; }
-      .cat-tab   { flex: 1 1 40%; border-bottom: 1px solid var(--border); }
+      .cat-tab   { flex: 1 1 45%; min-width: 0; border-bottom: 1px solid var(--border); }
+
+      /* Module grid: 2 columns instead of 3, last item full width */
+      .module-grid { grid-template-columns: 1fr 1fr !important; }
+      .module-grid > *:last-child { grid-column: 1 / -1; }
+
+      /* Chips: allow horizontal scroll on very small screens */
+      .chip-row { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; }
+      .chip-row::-webkit-scrollbar { height: 3px; }
+      .chip-row::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
     }
   </style>
 </head>
@@ -556,8 +579,8 @@
           <div className="hdr-inner">
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
               <img src="logo.png" alt="AEROCOMPACT" style={{ height:20, filter:'invert(1) brightness(1.1)' }}/>
-              <div style={{ width:1, height:18, background:'var(--border)' }}/>
-              <span style={{ fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.18em', color:'var(--text3)' }}>{t.title}</span>
+              <div className="hdr-divider" style={{ width:1, height:18, background:'var(--border)' }}/>
+              <span className="hdr-title" style={{ fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.18em', color:'var(--text3)' }}>{t.title}</span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               {["de","en","it"].map(code=>(
@@ -653,7 +676,7 @@
 
         {/* ── MAIN ── */}
         <div className="main-inner" style={{ maxWidth:1200, margin:'0 auto', padding:'36px 32px 80px' }}>
-          <div className="main-cols" style={{ display:'flex', alignItems:'flex-start' }}>
+          <div className="main-cols" style={{ display:'flex', alignItems:'flex-start', gap:0 }}>
 
             {/* ── LEFT COL ── */}
             <div className="left-col" style={{ flex:'0 0 57%', paddingRight:36, borderRight:'1px solid var(--border)' }}>
@@ -684,7 +707,7 @@
                     <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:16 }}>
                       <div>
                         <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
-                        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                        <div className="chip-row" style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                           {flatSystemKeysVisible.map(s=>(
                             <button key={s} className={`chip${flatSystem===s?' active':''}`} onClick={()=>setFlatSystem(s)}>{s}</button>
                           ))}
@@ -729,7 +752,7 @@
                   {category==="Pitch" && (
                     <div className="fade-up">
                       <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                      <div className="chip-row" style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                         {idx.pitch.map(p=>(
                           <button key={p.system} className={`chip${pitchSystem===p.system?' active':''}`} onClick={()=>setPitchSystem(p.system)}>{t.systemLabels?.[p.system]||p.system}</button>
                         ))}
@@ -741,7 +764,7 @@
                   {category==="Metal" && (
                     <div className="fade-up">
                       <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                      <div className="chip-row" style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
                         {idx.metal.map(m=>(
                           <button key={m.system} className={`chip${metalSystem===m.system?' active':''}`} onClick={()=>setMetalSystem(m.system)}>{m.system}</button>
                         ))}
@@ -793,7 +816,7 @@
                     <Icon name="zap" size={13} style={{ color:'var(--text3)' }}/>
                     {t.modulKonditionen}
                   </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
+                  <div className="module-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.leistung}</div>
                       <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
