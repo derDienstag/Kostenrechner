@@ -614,11 +614,15 @@
     const currentModel=result.meta?.m;
 
     const bomSysKey = useMemo(() => {
-      if(category==="Flat") return (alpine&&hasAlpineVariant(flatSystem))?`${flatSystem} alpine`:flatSystem;
+      if(category==="Flat") {
+        const sys = (alpine&&hasAlpineVariant(flatSystem))?`${flatSystem} alpine`:flatSystem;
+        if(BOM_DATA[`${sys} ${flatKlemmung}`]) return `${sys} ${flatKlemmung}`;
+        return sys;
+      }
       if(category==="Pitch") return pitchSystem;
       if(category==="Metal") return metalSystem;
       return "";
-    },[category,flatSystem,pitchSystem,metalSystem,alpine]);
+    },[category,flatSystem,flatKlemmung,pitchSystem,metalSystem,alpine]);
 
     const bomEstimate = useMemo(() => {
       const schnee = category==="Flat" ? 0.1 : snowLoad;
