@@ -371,9 +371,9 @@
     meta: { stand:"04/2026", modul:"TSM-NEG9R.25 450W FB", hinweis:"Listenpreise je kWp." }
   };
   const PLACEHOLDER_CATEGORIES = {
-    GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground/Flat"] }
+    GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground"] }
   };
-  const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.02, CH:1.15, OTHER:1.08 };
+  const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.00, CH:1.00, OTHER:0.95 };
   const LS_CONFIG="aerocompact-config-v4", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
   // ── I18N ───────────────────────────────────────────────────────
@@ -595,7 +595,7 @@
     const animPriceKwp = useAnimatedNumber(result.pricePerKwp||0);
     const animTotal = useAnimatedNumber(result.totalCost||0);
 
-    const fmt2 = n=>new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+    const fmt2 = n=>new Intl.NumberFormat("de-DE",{minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
 
     const mailtoAnfrage = useMemo(()=>{
       const sys = result.systemDisplay || category;
@@ -838,7 +838,6 @@
                     <div className="fade-up" style={{ paddingTop:2 }}>
                       <p style={{ fontSize:13, fontWeight:600, color:'var(--text2)', marginBottom:5 }}>{PLACEHOLDER_CATEGORIES[category].label}</p>
                       <p style={{ fontSize:12, color:'var(--text3)', marginBottom:10, lineHeight:1.5 }}>{t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}</p>
-                      <span className="badge badge-warn"><Icon name="mail" size={10}/> {t.bitteVertriebAnfragen}</span>
                     </div>
                   )}
                 </div>
@@ -881,12 +880,10 @@
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.leistung}</div>
                       <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                      <div style={{ fontSize:11, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{config.meta?.modul||"—"}</div>
                     </div>
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.anzahlModule}</div>
                       <input type="number" className="inp num-inp" value={moduleCount} onChange={e=>setModuleCount(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                      <div style={{ fontSize:11, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', fontVariantNumeric:'tabular-nums' }}>{fmt2(result.totalKwp||0)} kWp</div>
                     </div>
                     <div>
                       <div className="lbl" style={{ marginBottom:7 }}>{t.rabatt}</div>
@@ -937,11 +934,6 @@
                   {/* Normal result */}
                   {result.preis!=null && (
                     <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:20 }}>
-                      {result.status==="extrapoliert" && (
-                        <div className="badge badge-warn" style={{ alignSelf:'flex-start' }}>
-                          <Icon name="alert-triangle" size={10}/> {t.extrapoliert}
-                        </div>
-                      )}
 
                       {/* Primary: €/kWp */}
                       <div>
@@ -980,27 +972,6 @@
                         </div>
                       </div>
 
-                      {/* Breakdown */}
-                      {(result.countryFactor!==1||result.discountFactor!==1) && (
-                        <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
-                          <div className="bk-row">
-                            <span style={{ color:'var(--text3)' }}>{t.modellpreis}</span>
-                            <span style={{ color:'var(--text2)' }}>€ {fmt2(result.basePricePerKwp)}/kWp</span>
-                          </div>
-                          {result.countryFactor!==1 && (
-                            <div className="bk-row">
-                              <span style={{ color:'var(--text3)' }}>{t.laenderfaktor} {country}</span>
-                              <span style={{ color:'var(--text2)' }}>× {result.countryFactor.toFixed(2)}</span>
-                            </div>
-                          )}
-                          {result.discountFactor!==1 && (
-                            <div className="bk-row">
-                              <span style={{ color:'var(--text3)' }}>{t.rabattLine}</span>
-                              <span style={{ color:'var(--cyan)' }}>−{discount}%</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1070,7 +1041,7 @@
               {/* Disclaimer */}
               <div style={{ padding:'12px 14px', borderRadius:'var(--rad-sm)', border:'1px solid var(--border)' }}>
                 <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text3)', marginBottom:4 }}>{t.disclaimerTitle}</div>
-                <p style={{ fontSize:11, color:'var(--text3)', lineHeight:1.55 }}>{t.disclaimerBody} {config.meta?.stand||"—"}.</p>
+                <p style={{ fontSize:11, color:'var(--text3)', lineHeight:1.55 }}>{t.disclaimerBody} {new Date().toLocaleDateString("de-DE",{month:"long",year:"numeric"})}.</p>
               </div>
 
             </div>
