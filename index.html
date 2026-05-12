@@ -351,8 +351,6 @@
   // ── CONFIG ─────────────────────────────────────────────────────
   const FALLBACK_CONFIG = {
     models: {
-      "Flat|GS10plus|Ost/West|KSK": { kategorie:"Flat",system:"GS10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-13.146223,58.155306,-34.861344,174.557652],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9965,max_error_eur:2.3,rmse_eur:1.29,n_data_points:8,polynomial_degree:3},
-      "Flat|GS15|Süd|KSK": { kategorie:"Flat",system:"GS15",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[134.505556,-70.778333,165.762778],wind_range:[0.1,1.0],wind_anfrage_threshold:1.2,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:3,polynomial_degree:2},
       "Flat|S10|Süd|KSK": { kategorie:"Flat",system:"S10",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[-49.383117,160.262987,-74.374026,119.434156],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:4,polynomial_degree:3},
       "Flat|S10 alpine|Süd|KSK": { kategorie:"Flat",system:"S10 alpine",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[-48.41342,158.244805,-73.463723,198.152338],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:4,polynomial_degree:3},
       "Flat|S10plus|Ost/West|KSK": { kategorie:"Flat",system:"S10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-12.798457,50.842505,-33.724486,100.993618],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9787,max_error_eur:3.8,rmse_eur:2.02,n_data_points:8,polynomial_degree:3},
@@ -362,6 +360,8 @@
       "Flat|SN2plus|Ost/West|KSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[2.139721,-1.858061,1.58016,112.986119],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9928,max_error_eur:0.56,rmse_eur:0.36,n_data_points:8,polynomial_degree:3},
       "Flat|SN2plus|Ost/West|LSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[1.646949,-0.949879,1.219106,218.839462],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9952,max_error_eur:0.43,rmse_eur:0.27,n_data_points:8,polynomial_degree:3},
       "Flat|S_Base plus|Ost/West|LSK": { kategorie:"Flat",system:"S_Base plus",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[-0.0,0.0,-0.0,176.36],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:8,polynomial_degree:3},
+      "Flat|GS10plus|Ost/West|KSK": { kategorie:"Flat",system:"GS10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-13.146223,58.155306,-34.861344,174.557652],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9965,max_error_eur:2.3,rmse_eur:1.29,n_data_points:8,polynomial_degree:3},
+      "Flat|GS15|Süd|KSK": { kategorie:"Flat",system:"GS15",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[134.505556,-70.778333,165.762778],wind_range:[0.1,1.0],wind_anfrage_threshold:1.2,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:3,polynomial_degree:2},
       "Pitch|XM-F|—|—": { kategorie:"Pitch",system:"XM-F",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:198.67,wind_coef:[5.57472,41.425657,-14.779659,0.337444],snow_coef:[1.641144,-5.046522,26.750344,-4.4576],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9954,snow_r_squared:0.977,wind_max_error_eur:9.85,snow_max_error_eur:15.02,wind_polynomial_degree:3,snow_polynomial_degree:3},
       "Pitch|XT-R mit Blechersatzziegel|—|—": { kategorie:"Pitch",system:"XT-R mit Blechersatzziegel",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:161.38,wind_coef:[-113.125084,325.201957,-143.981822,11.81147],snow_coef:[-5.216999,48.370248,-3.466768,-0.432242],wind_range:[0.1,1.6],snow_range:[0.1,2.0],wind_anfrage_threshold:1.8,snow_anfrage_threshold:2.5,wind_r_squared:0.9945,snow_r_squared:0.9982,wind_max_error_eur:7.7,snow_max_error_eur:4.0,wind_polynomial_degree:3,snow_polynomial_degree:3},
       "Pitch|XT-R|—|—": { kategorie:"Pitch",system:"XT-R",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:121.74,wind_coef:[-61.051837,179.409772,-83.201622,6.957782],snow_coef:[1.862987,13.692711,4.813569,-0.842983],wind_range:[0.1,1.6],snow_range:[0.1,2.0],wind_anfrage_threshold:1.8,snow_anfrage_threshold:2.5,wind_r_squared:0.9919,snow_r_squared:0.9966,wind_max_error_eur:5.59,snow_max_error_eur:2.96,wind_polynomial_degree:3,snow_polynomial_degree:3},
@@ -375,7 +375,7 @@
     GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground"] }
   };
   const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.00, CH:1.00, OTHER:0.95 };
-  const LS_CONFIG="aerocompact-config-v5", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
+  const LS_CONFIG="aerocompact-config-v6", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
   // ── I18N ───────────────────────────────────────────────────────
   const T = {
@@ -421,7 +421,7 @@
   }
 
   function richtpreisProKwp({ kategorie, system, ausrichtung, klemmung, schnee, wind, config, t }) {
-    if(kategorie==="GROUND") return { preis:null, status:"anfrage", meta:{ reason: t?.datenInAktualisierung||"Daten in Aktualisierung" } };
+    if(kategorie==="GROUND") { kategorie="Flat"; system="GS10plus"; ausrichtung="Ost/West"; klemmung="KSK"; }
     const key=makeKey(kategorie,system,ausrichtung,klemmung);
     const m=config.models[key];
     if(!m) return { preis:null, status:"unbekannt", meta:{ key, reason:"—" } };
@@ -584,7 +584,8 @@
       if(category==="Flat") { sysName=(alpine&&hasAlpineVariant(flatSystem))?`${flatSystem} alpine`:flatSystem; ausrichtung=flatAusrichtung; klemmung=flatKlemmung; }
       else if(category==="Pitch") { sysName=pitchSystem; ausrichtung="—"; klemmung="—"; }
       else if(category==="Metal") { sysName=metalSystem; ausrichtung="—"; klemmung="—"; }
-      const effectiveSchnee=category==="Flat"?0.1:snowLoad;
+      else if(category==="GROUND") { sysName="GS Ground"; ausrichtung="—"; klemmung="—"; }
+      const effectiveSchnee=(category==="Flat"||category==="GROUND")?0.1:snowLoad;
       const r=richtpreisProKwp({ kategorie:category, system:sysName, ausrichtung, klemmung, wind:windLoad, schnee:effectiveSchnee, config, t });
       if(r.preis==null) return { ...r, totalKwp:(moduleCount*modulePower)/1000 };
       const cF=countryFactors[country]??1.0, dF=1-(discount/100);
@@ -622,11 +623,12 @@
       }
       if(category==="Pitch") return pitchSystem;
       if(category==="Metal") return metalSystem;
+      if(category==="GROUND") return "GS10plus";
       return "";
     },[category,flatSystem,flatKlemmung,pitchSystem,metalSystem,alpine]);
 
     const bomEstimate = useMemo(() => {
-      const schnee = category==="Flat" ? 0.1 : snowLoad;
+      const schnee = (category==="Flat"||category==="GROUND") ? 0.1 : snowLoad;
       return getBomEstimate(bomSysKey, schnee, windLoad, moduleCount);
     },[bomSysKey,category,snowLoad,windLoad,moduleCount]);
 
@@ -838,11 +840,9 @@
                     </div>
                   )}
 
-                  {/* Anfrage placeholder */}
                   {category==="GROUND" && (
                     <div className="fade-up" style={{ paddingTop:2 }}>
-                      <p style={{ fontSize:13, fontWeight:600, color:'var(--text2)', marginBottom:5 }}>{PLACEHOLDER_CATEGORIES[category].label}</p>
-                      <p style={{ fontSize:12, color:'var(--text3)', marginBottom:10, lineHeight:1.5 }}>{t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}</p>
+                      <p style={{ fontSize:13, fontWeight:600, color:'var(--text2)', marginBottom:5 }}>GS Ground</p>
                     </div>
                   )}
                 </div>
