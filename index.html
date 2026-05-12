@@ -12,226 +12,292 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     :root {
-      --bg: #08090E;
-      --bg2: #0D0E16;
-      --surface: rgba(255,255,255,0.035);
-      --surface2: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.07);
-      --border2: rgba(255,255,255,0.14);
-      --cyan: #5CE1E6;
-      --cyan-dim: rgba(92,225,230,0.12);
-      --cyan-glow: rgba(92,225,230,0.35);
-      --amber: #F0A830;
-      --amber-dim: rgba(240,168,48,0.12);
-      --text: #E8EAED;
-      --text2: rgba(232,234,237,0.55);
-      --text3: rgba(232,234,237,0.28);
+      /* surfaces */
+      --bg:        oklch(8.5% 0.008 200);
+      --bg2:       oklch(12%  0.008 200);
+      --surface:   oklch(15%  0.008 200);
+      --surface2:  oklch(19%  0.008 200);
+      /* borders */
+      --border:    oklch(22%  0.006 200);
+      --border2:   oklch(32%  0.006 200);
+      /* text */
+      --text:      oklch(92%  0.004 200);
+      --text2:     oklch(62%  0.004 200);
+      --text3:     oklch(40%  0.004 200);
+      /* accent */
+      --cyan:      oklch(78%  0.13  195);
+      --cyan-mid:  oklch(78%  0.13  195 / 0.18);
+      --cyan-dim:  oklch(78%  0.13  195 / 0.09);
+      /* semantic */
+      --amber:     oklch(74%  0.14   72);
+      --amber-dim: oklch(74%  0.14   72 / 0.10);
+      --err:       oklch(65%  0.16   20);
+      --err-dim:   oklch(65%  0.16   20 / 0.10);
+      /* type */
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Space Grotesk', sans-serif;
-      --rad: 14px;
-      --rad-sm: 9px;
+      /* geometry */
+      --rad:    10px;
+      --rad-sm:  6px;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
+
     body, #root {
       min-height: 100vh;
       background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
       -webkit-font-smoothing: antialiased;
-      background-image:
-        linear-gradient(rgba(92,225,230,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(92,225,230,0.025) 1px, transparent 1px);
-      background-size: 48px 48px;
     }
+
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-    /* Cards */
+    /* ── Header ─────────────────────────────────────────────────── */
+    .hdr {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .hdr-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 32px; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── Lang ───────────────────────────────────────────────────── */
+    .lang-btn {
+      padding: 4px 8px; border-radius: 5px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border: 1px solid transparent; cursor: pointer;
+      background: transparent; font-family: var(--sans);
+      color: var(--text3); transition: all 0.12s;
+    }
+    .lang-btn:hover { color: var(--text); border-color: var(--border); }
+    .lang-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* ── Card ───────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--rad);
-      backdrop-filter: blur(12px);
-      transition: border-color 0.25s;
     }
-    .card:hover { border-color: var(--border2); }
 
-    /* Category cards */
-    .cat-card {
+    /* ── Section header ─────────────────────────────────────────── */
+    .sec-hdr {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--text3);
+    }
+
+    /* ── Category tabs ──────────────────────────────────────────── */
+    .cat-tabs {
+      display: flex;
       border: 1px solid var(--border);
       border-radius: var(--rad-sm);
-      padding: 14px 16px;
-      cursor: pointer;
-      background: transparent;
-      text-align: left;
-      width: 100%;
-      color: var(--text);
+      overflow: hidden;
+      background: var(--bg2);
+      margin-bottom: 20px;
+    }
+    .cat-tab {
+      flex: 1; padding: 9px 6px;
+      border: none; background: transparent;
       font-family: var(--sans);
-      transition: all 0.2s;
-      display: flex; align-items: flex-start; gap: 12px;
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+      text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      border-right: 1px solid var(--border);
     }
-    .cat-card:hover { border-color: var(--border2); background: var(--surface); }
-    .cat-card.active {
-      border-color: var(--cyan);
-      background: var(--cyan-dim);
-      box-shadow: 0 0 0 1px rgba(92,225,230,0.15), 0 4px 24px rgba(92,225,230,0.08);
+    .cat-tab:last-child { border-right: none; }
+    .cat-tab:hover:not(.cat-tab-active) { background: var(--surface); }
+    .cat-tab-active { background: var(--surface); }
+    .cat-tab-name {
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+      color: var(--text2);
     }
-    .cat-card.active .cat-icon { color: var(--cyan); }
-    .cat-icon { color: var(--text3); transition: color 0.2s; margin-top: 2px; flex-shrink: 0; }
+    .cat-tab-active .cat-tab-name { color: var(--cyan); }
+    .cat-tab-sub { font-size: 10px; color: var(--text3); white-space: nowrap; }
+    .cat-req-dot {
+      display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+      background: var(--amber); margin-left: 4px;
+      vertical-align: middle; position: relative; top: -1px;
+    }
 
-    /* Chips */
+    /* ── Chips ──────────────────────────────────────────────────── */
     .chip {
-      padding: 7px 14px; border: 1px solid var(--border);
-      border-radius: 100px; background: transparent;
-      color: var(--text2); font-family: var(--sans);
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
+      padding: 5px 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--rad-sm);
+      background: transparent; color: var(--text2);
+      font-family: var(--sans); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
     }
-    .chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface); }
+    .chip:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
     .chip.active { border-color: var(--cyan); background: var(--cyan-dim); color: var(--cyan); font-weight: 600; }
     .chip:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    /* Inputs */
+    /* ── Inputs ─────────────────────────────────────────────────── */
     .inp {
-      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-      border-radius: var(--rad-sm); padding: 11px 14px;
-      color: var(--text); font-family: var(--sans); font-size: 15px;
-      width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 9px 12px;
+      color: var(--text); font-family: var(--sans); font-size: 13px;
+      width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
       -webkit-appearance: none; appearance: none;
     }
-    .inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(92,225,230,0.1); }
+    .inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
     select.inp { cursor: pointer; }
-    select.inp option { background: #12141f; }
+    select.inp option { background: oklch(12% 0.008 200); }
 
-    /* Segmented */
-    .seg { display: flex; border: 1px solid var(--border); border-radius: var(--rad-sm); overflow: hidden; background: var(--surface); }
+    .num-inp {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 9px 12px;
+      color: var(--text); font-family: var(--mono); font-size: 14px;
+      width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-align: right; font-variant-numeric: tabular-nums;
+    }
+    .num-inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
+
+    /* ── Segmented ──────────────────────────────────────────────── */
+    .seg {
+      display: flex; border: 1px solid var(--border);
+      border-radius: var(--rad-sm); overflow: hidden; background: var(--bg2);
+    }
     .seg-btn {
-      flex: 1; padding: 9px 10px; border: none; background: transparent;
-      color: var(--text2); font-family: var(--sans); font-size: 11px;
-      font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-      cursor: pointer; transition: all 0.15s;
+      flex: 1; padding: 8px 10px; border: none; background: transparent;
+      color: var(--text2); font-family: var(--sans);
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      cursor: pointer; transition: all 0.12s;
     }
     .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
-    .seg-btn:hover:not(:disabled) { color: var(--text); background: var(--surface2); }
-    .seg-btn.active { background: var(--cyan); color: #000; font-weight: 700; }
+    .seg-btn:hover:not(:disabled) { color: var(--text); background: var(--surface); }
+    .seg-btn.active { background: var(--surface2); color: var(--text); }
     .seg-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
-    /* Custom range slider */
-    .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer; }
+    /* ── Slider ─────────────────────────────────────────────────── */
+    .slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 3px; border-radius: 2px;
+      outline: none; cursor: pointer;
+    }
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--cyan); border: 2px solid var(--bg);
-      box-shadow: 0 0 10px var(--cyan-glow), 0 0 0 1px var(--cyan);
-      cursor: pointer; transition: box-shadow 0.2s, transform 0.15s;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--cyan);
+      cursor: pointer; transition: transform 0.12s;
     }
-    .slider::-webkit-slider-thumb:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: scale(1.15); }
-    .slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--cyan); border: 2px solid var(--bg); cursor: pointer; }
+    .slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .slider::-webkit-slider-thumb:active { transform: scale(1.05); }
+    .slider::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--cyan); cursor: pointer;
+    }
 
-    /* Toggle */
-    .toggle-wrap { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--rad-sm); cursor: pointer; transition: all 0.2s; }
+    /* ── Toggle ─────────────────────────────────────────────────── */
+    .toggle-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--rad-sm); cursor: pointer; transition: all 0.15s;
+      background: transparent;
+    }
     .toggle-wrap:hover { border-color: var(--border2); }
-    .toggle-wrap.on { border-color: rgba(92,225,230,0.4); background: var(--cyan-dim); }
-    .toggle-track { width: 38px; height: 21px; border-radius: 11px; transition: background 0.2s; position: relative; flex-shrink: 0; }
-    .toggle-thumb { position: absolute; top: 2.5px; width: 16px; height: 16px; border-radius: 50%; transition: left 0.2s; }
-
-    /* Label */
-    .lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
-
-    /* Result card glow */
-    .result-glow {
-      position: relative;
-      background: linear-gradient(135deg, rgba(92,225,230,0.06) 0%, rgba(92,225,230,0.02) 100%);
-      border: 1px solid rgba(92,225,230,0.22);
-      border-radius: var(--rad);
-      overflow: hidden;
+    .toggle-wrap.on { border-color: oklch(78% 0.13 195 / 0.4); background: var(--cyan-dim); }
+    .toggle-track {
+      width: 34px; height: 18px; border-radius: 9px;
+      transition: background 0.15s; position: relative; flex-shrink: 0;
     }
-    .result-glow::before {
-      content: ''; position: absolute; top: -60%; left: -30%; width: 180%; height: 180%;
-      background: radial-gradient(ellipse at 35% 35%, rgba(92,225,230,0.07) 0%, transparent 55%);
-      pointer-events: none;
+    .toggle-thumb {
+      position: absolute; top: 2px; width: 14px; height: 14px;
+      border-radius: 50%; transition: left 0.15s;
     }
 
-    /* Animated number */
-    @keyframes numPop { 0% { transform: scale(1.04); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-    .num-pop { animation: numPop 0.3s ease forwards; }
-
-    /* Solar glow pulse */
-    @keyframes solarPulse {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
+    /* ── Label ──────────────────────────────────────────────────── */
+    .lbl {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3);
     }
-    @keyframes sunSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 8px; border-radius: 4px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
     }
-    @keyframes energyFlow {
-      0% { stroke-dashoffset: 40; opacity: 0; }
-      20% { opacity: 1; }
-      80% { opacity: 1; }
-      100% { stroke-dashoffset: 0; opacity: 0; }
+    .badge-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid oklch(74% 0.14 72 / 0.25); }
+    .badge-ok   { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid oklch(78% 0.13 195 / 0.2); }
+    .badge-err  { background: var(--err-dim);   color: var(--err);   border: 1px solid oklch(65% 0.16 20 / 0.25); }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 13px; border-radius: var(--rad-sm);
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      cursor: pointer; transition: all 0.12s; border: 1px solid transparent;
     }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--text2); }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+    .btn-primary { background: var(--cyan); color: oklch(12% 0.008 200); border-color: var(--cyan); }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-danger { background: transparent; border-color: oklch(65% 0.16 20 / 0.3); color: var(--err); }
+    .btn-danger:hover { background: var(--err-dim); }
+
+    /* ── Breakdown rows ─────────────────────────────────────────── */
+    .bk-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; font-size: 11px; font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
     }
-    .fade-up { animation: fadeUp 0.35s ease forwards; }
-
-    /* Status badge */
-    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-    .badge-warn { background: rgba(240,168,48,0.12); color: var(--amber); border: 1px solid rgba(240,168,48,0.25); }
-    .badge-ok { background: rgba(92,225,230,0.1); color: var(--cyan); border: 1px solid rgba(92,225,230,0.2); }
-    .badge-err { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
-
-    /* Header */
-    .hdr { position: sticky; top: 0; z-index: 50; background: rgba(8,9,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
-
-    /* Lang btn */
-    .lang-btn { padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid transparent; cursor: pointer; background: transparent; font-family: var(--sans); transition: all 0.15s; }
-    .lang-btn:hover { border-color: var(--border2); color: var(--text); }
-    .lang-btn.active { background: var(--cyan); color: #000; border-color: var(--cyan); }
-
-    /* Icon helper */
-    .ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-    /* Grid number input */
-    .num-inp { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--rad-sm); padding: 10px 14px; color: var(--text); font-family: var(--mono); font-size: 16px; width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s; text-align: right; }
-    .num-inp:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(92,225,230,0.1); }
-
-    /* Breakdown row */
-    .bk-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 12px; font-family: var(--mono); }
     .bk-row + .bk-row { border-top: 1px solid var(--border); }
 
-    /* Backend textarea */
-    textarea { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--rad-sm); padding: 12px; color: var(--text); font-family: var(--mono); font-size: 12px; width: 100%; outline: none; resize: none; transition: border-color 0.2s; }
+    /* ── Textarea ───────────────────────────────────────────────── */
+    textarea {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--rad-sm); padding: 11px 12px;
+      color: var(--text); font-family: var(--mono); font-size: 11px;
+      width: 100%; outline: none; resize: none;
+      transition: border-color 0.15s; line-height: 1.6;
+    }
     textarea:focus { border-color: var(--cyan); }
     textarea::-webkit-scrollbar { width: 5px; }
-    textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-    /* Btn */
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--rad-sm); font-family: var(--sans); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-    .btn-ghost { background: transparent; border-color: var(--border); color: var(--text2); }
-    .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface); }
-    .btn-primary { background: var(--cyan); color: #000; border-color: var(--cyan); }
-    .btn-primary:hover { background: rgba(92,225,230,0.85); }
-    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
-    .btn-danger { background: transparent; border-color: rgba(248,113,113,0.3); color: #f87171; }
-    .btn-danger:hover { background: rgba(248,113,113,0.08); }
+    /* ── Icon helper ────────────────────────────────────────────── */
+    .ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-    @media (max-width: 768px) {
-      .main-grid { flex-direction: column !important; }
-      .right-col { position: static !important; }
+    /* ── Animations ─────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.22s ease forwards; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      .main-cols { flex-direction: column !important; }
+      .left-col  { border-right: none !important; padding-right: 0 !important; }
+      .right-col { position: static !important; padding-left: 0 !important; }
+      .hdr-inner, .main-inner { padding-left: 16px !important; padding-right: 16px !important; }
+      .cat-tabs  { flex-wrap: wrap; }
+      .cat-tab   { flex: 1 1 40%; border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-  const { useState, useEffect, useMemo, useRef, useCallback } = React;
+  const { useState, useEffect, useMemo, useRef } = React;
 
-  // ── ADMIN HASH ─────────────────────────────────────────────────────────
+  // ── ADMIN HASH ─────────────────────────────────────────────────
   const ADMIN_PASSWORD_HASH = "7da41059a46f5f3980547844205d27b646ac32baa60316896bd044c0bf1ee852";
   async function sha256Hex(str) {
     const buf = new TextEncoder().encode(str);
@@ -239,48 +305,55 @@
     return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
   }
 
-  // ── CONFIG ─────────────────────────────────────────────────────────────
+  // ── CONFIG ─────────────────────────────────────────────────────
   const FALLBACK_CONFIG = {
     models: {
-      "Flat|GS10plus|Ost/West|KSK": { kategorie:"Flat",system:"GS10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-13.146223,58.155306,-34.861344,174.557652],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9965,max_error:2.3,rmse:1.29,n_data_points:8,polynomial_degree:3},
-      "Flat|GS15|Süd|KSK": { kategorie:"Flat",system:"GS15",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[125.672222,-66.628333,156.556111],wind_range:[0.1,1.0],wind_anfrage_threshold:1.2,fixed_snow:0.1,r_squared:1.0,max_error:0.0,rmse:0.0,n_data_points:3,polynomial_degree:2},
-      "Flat|S10|Süd|KSK": { kategorie:"Flat",system:"S10",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[61.315648,-25.923358,144.730788],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:0.9962,max_error:2.24,rmse:1.5,n_data_points:4,polynomial_degree:2},
-      "Flat|S10 alpine|Süd|KSK": { kategorie:"Flat",system:"S10 alpine",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[61.315648,-25.923358,243.310788],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:0.9962,max_error:2.24,rmse:1.5,n_data_points:4,polynomial_degree:2},
-      "Flat|S10plus|Ost/West|KSK": { kategorie:"Flat",system:"S10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-11.856688,47.123507,-31.375407,104.507305],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9776,max_error:3.57,rmse:1.92,n_data_points:8,polynomial_degree:3},
-      "Flat|S10plus alpine|Ost/West|KSK": { kategorie:"Flat",system:"S10plus alpine",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-11.856688,47.123507,-31.375407,181.617305],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9776,max_error:3.57,rmse:1.92,n_data_points:8,polynomial_degree:3},
-      "Flat|SN2|Süd|KSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[5.778695,-2.505668,3.467043,162.387346],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9942,max_error:1.98,rmse:1.07,n_data_points:8,polynomial_degree:3},
-      "Flat|SN2|Süd|LSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"LSK",type:"poly_wind",wind_coef:[15.404742,-36.887898,31.303502,265.38337],wind_range:[0.1,1.95],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9791,max_error:2.32,rmse:1.44,n_data_points:8,polynomial_degree:3},
-      "Flat|SN2plus|Ost/West|KSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[1.845028,-1.560569,1.482203,105.095068],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9899,max_error:0.58,rmse:0.38,n_data_points:8,polynomial_degree:3},
-      "Flat|SN2plus|Ost/West|LSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[9.229777,-30.599737,36.441399,191.289379],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9939,max_error:0.69,rmse:0.45,n_data_points:8,polynomial_degree:3},
-      "Flat|S_Base|Ost/West|LSK": { kategorie:"Flat",system:"S_Base",ausrichtung:"Ost/West",klemmung:"LSK",type:"constant",value:157.86,wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,n_data_points:8},
-      "Pitch|XM-F|—|—": { kategorie:"Pitch",system:"XM-F",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:181.6,wind_coef:[55.547065,-29.140583,2.229737],snow_coef:[1.85801,-6.468626,26.812175,-4.310213],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9957,snow_r_squared:0.9789,wind_max_error:8.61,snow_max_error:13.01},
-      "Pitch|XT-R ohne|—|—": { kategorie:"Pitch",system:"XT-R ohne",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:100.73,wind_coef:[-57.077798,169.321763,-81.528039,6.96262],snow_coef:[-14.418603,61.153499,-33.80111,3.35175],wind_range:[0.1,1.6],snow_range:[0.1,2.5],wind_anfrage_threshold:1.8,snow_anfrage_threshold:3.0,wind_r_squared:0.984,snow_r_squared:0.9837,wind_max_error:7.87,snow_max_error:7.06}
+      "Flat|GS10plus|Ost/West|KSK": { kategorie:"Flat",system:"GS10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-13.146223,58.155306,-34.861344,174.557652],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9965,max_error_eur:2.3,rmse_eur:1.29,n_data_points:8,polynomial_degree:3},
+      "Flat|GS15|Süd|KSK": { kategorie:"Flat",system:"GS15",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[134.505556,-70.778333,165.762778],wind_range:[0.1,1.0],wind_anfrage_threshold:1.2,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:3,polynomial_degree:2},
+      "Flat|S10|Süd|KSK": { kategorie:"Flat",system:"S10",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[-49.383117,160.262987,-74.374026,119.434156],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:4,polynomial_degree:3},
+      "Flat|S10 alpine|Süd|KSK": { kategorie:"Flat",system:"S10 alpine",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[-48.41342,158.244805,-73.463723,198.152338],wind_range:[0.1,1.2],wind_anfrage_threshold:1.4,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:4,polynomial_degree:3},
+      "Flat|S10plus|Ost/West|KSK": { kategorie:"Flat",system:"S10plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-12.798457,50.842505,-33.724486,100.993618],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9787,max_error_eur:3.8,rmse_eur:2.02,n_data_points:8,polynomial_degree:3},
+      "Flat|S10plus alpine|Ost/West|KSK": { kategorie:"Flat",system:"S10plus alpine",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[-12.801736,50.850782,-33.734152,174.094899],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9787,max_error_eur:3.81,rmse_eur:2.02,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2|Süd|KSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"KSK",type:"poly_wind",wind_coef:[7.796392,-7.236313,7.721336,173.929294],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9947,max_error_eur:2.21,rmse_eur:1.15,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2|Süd|LSK": { kategorie:"Flat",system:"SN2",ausrichtung:"Süd",klemmung:"LSK",type:"poly_wind",wind_coef:[16.150733,-38.026321,31.775007,285.610891],wind_range:[0.1,1.95],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9777,max_error_eur:2.62,rmse_eur:1.6,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2plus|Ost/West|KSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"KSK",type:"poly_wind",wind_coef:[2.139721,-1.858061,1.58016,112.986119],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9928,max_error_eur:0.56,rmse_eur:0.36,n_data_points:8,polynomial_degree:3},
+      "Flat|SN2plus|Ost/West|LSK": { kategorie:"Flat",system:"SN2plus",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[1.646949,-0.949879,1.219106,218.839462],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:0.9952,max_error_eur:0.43,rmse_eur:0.27,n_data_points:8,polynomial_degree:3},
+      "Flat|S_Base|Ost/West|LSK": { kategorie:"Flat",system:"S_Base",ausrichtung:"Ost/West",klemmung:"LSK",type:"poly_wind",wind_coef:[-0.0,0.0,-0.0,176.36],wind_range:[0.1,2.0],wind_anfrage_threshold:null,fixed_snow:0.1,r_squared:1.0,max_error_eur:0.0,rmse_eur:0.0,n_data_points:8,polynomial_degree:3},
+      "Pitch|XM-F|—|—": { kategorie:"Pitch",system:"XM-F",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:198.67,wind_coef:[5.57472,41.425657,-14.779659,0.337444],snow_coef:[1.641144,-5.046522,26.750344,-4.4576],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9954,snow_r_squared:0.977,wind_max_error_eur:9.85,snow_max_error_eur:15.02,wind_polynomial_degree:3,snow_polynomial_degree:3},
+      "Pitch|XT-R mit|—|—": { kategorie:"Pitch",system:"XT-R mit",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:161.38,wind_coef:[-113.125084,325.201957,-143.981822,11.81147],snow_coef:[-5.216999,48.370248,-3.466768,-0.432242],wind_range:[0.1,1.6],snow_range:[0.1,2.0],wind_anfrage_threshold:1.8,snow_anfrage_threshold:2.5,wind_r_squared:0.9945,snow_r_squared:0.9982,wind_max_error_eur:7.7,snow_max_error_eur:4.0,wind_polynomial_degree:3,snow_polynomial_degree:3},
+      "Pitch|XT-R ohne|—|—": { kategorie:"Pitch",system:"XT-R ohne",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:121.74,wind_coef:[-61.051837,179.409772,-83.201622,6.957782],snow_coef:[1.862987,13.692711,4.813569,-0.842983],wind_range:[0.1,1.6],snow_range:[0.1,2.0],wind_anfrage_threshold:1.8,snow_anfrage_threshold:2.5,wind_r_squared:0.9919,snow_r_squared:0.9966,wind_max_error_eur:5.59,snow_max_error_eur:2.96,wind_polynomial_degree:3,snow_polynomial_degree:3},
+      "Pitch|XWS|—|—": { kategorie:"Pitch",system:"XWS",ausrichtung:"—",klemmung:"—",type:"no_data",hinweis:"Daten noch nicht hinterlegt — immer Anfrage erforderlich"},
+      "Metal|TL|—|—": { kategorie:"Metal",system:"TL",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:49.17,wind_coef:[-10.308374,49.101466,-26.629366,2.191305],snow_coef:[0.195501,1.824233,-4.077209,0.84454],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9983,snow_r_squared:0.9489,wind_max_error_eur:1.92,snow_max_error_eur:4.49,wind_polynomial_degree:3,snow_polynomial_degree:3},
+      "Metal|TS|—|—": { kategorie:"Metal",system:"TS",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:38.11,wind_coef:[-2.767101,21.319018,-10.769345,0.792004],snow_coef:[1.429861,-6.471519,7.043649,-1.0719],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9863,snow_r_squared:0.902,wind_max_error_eur:3.13,snow_max_error_eur:3.01,wind_polynomial_degree:3,snow_polynomial_degree:3}
     },
     meta: { stand:"04/2026", modul:"TSM-NEG9R.25 450W FB", hinweis:"Listenpreise je kWp." }
   };
   const PLACEHOLDER_CATEGORIES = {
-    METAL: { label:"CompactMETAL (Blechdach)", systems:["TM (Trapezblech)","TL (Längsschiene)","TR"] },
     GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground/Flat"] }
   };
   const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.02, CH:1.15, OTHER:1.08 };
   const LS_CONFIG="aerocompact-config-v3", LS_FACTORS="aerocompact-factors-v3", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
-  // ── I18N ───────────────────────────────────────────────────────────────
+  // ── I18N ───────────────────────────────────────────────────────
   const T = {
-    de:{ title:"Richtpreis-Rechner", montagesystem:"Montagesystem", systemKategorie:"System-Kategorie", flat:"CompactFLAT", flatSub:"Flachdach", pitch:"CompactPITCH", pitchSub:"Schrägdach", metal:"CompactMETAL", metalSub:"Blechdach · Anfrage", ground:"CompactGROUND", groundSub:"Freifläche · Anfrage", system:"System", klemmung:"Klemmung", ausrichtung:"Ausrichtung", ksk:"Kurze Seite", lsk:"Lange Seite", ow:"O/W", sued:"Süd", alpineLabel:"Alpine", alpineSub:"verstärkt für hohe Schneelasten", standortLasten:"Standort & Lasten", land:"Land", windlast:"Windlast", schneelast:"Schneelast", flatHinweis:"Schneelast ohne Einfluss bei Flachdachsystem", modulKonditionen:"Modul & Konditionen", leistung:"Leistung (Wp)", referenzmodul:"Referenzmodul", anzahlModule:"Anzahl Module", rabatt:"Kundenrabatt (%)", output:"Ergebnis", kostenProKwp:"Kosten pro kWp", gesamtkosten:"Gesamtkosten", moduleLabel:"Module", kostenProModul:"pro Modul", extrapoliert:"Extrapoliert", preisAufAnfrage:"Preis auf Anfrage", modellNichtVerfuegbar:"Modell nicht verfügbar", modellpreis:"Modellpreis", laenderfaktor:"Länderfaktor", rabattLine:"Rabatt", disclaimerTitle:"Alle Angaben ohne Gewähr", disclaimerBody:"Ersetzt keine statische Planung. Listenpreise je kWp, Stand", backendTitle:"Backend · Konfiguration", zuruecksetzen:"Zurücksetzen", modellKonfig:"Modell-Konfiguration (JSON)", aktuellLaden:"Laden", importieren:"Importieren", jsonPlaceholder:"JSON aus Regression-Skript hier einfügen…", laenderfaktoren:"Länderfaktoren", laenderfaktorenSub:"Multiplikativer Aufschlag auf €/kWp.", aktuellesModell:"Modell:", modelltyp:"Typ", windRange:"Wind-Range", snowRange:"Schnee-Range", anfrageWind:"Anfrage Wind", anfrageSchnee:"Anfrage Schnee", datenpunkte:"Datenpunkte", fixSnow:"fix 0.1", adminLogin:"Admin-Login", passwort:"Passwort", abbrechen:"Abbrechen", loginBtn:"Login", sessionHinweis:"Session läuft nach 4h ab.", falschesPasswort:"Falsches Passwort", datenInAktualisierung:"Daten in Aktualisierung – Preis auf Anfrage", bitteVertriebAnfragen:"Bitte Vertrieb anfragen.", kostenfunktionenFolgen:(s)=>`Kostenfunktionen für ${s} folgen.`, countries:{ DE:"Deutschland", AT:"Österreich", CH:"Schweiz", OTHER:"International" }, backend:"Backend", confirmReset:"Konfiguration und Faktoren auf Default zurücksetzen?", modelleImportiert:(n)=>`✓ ${n} Modelle importiert.`, jsonError:"JSON-Fehler:", expectModels:"Erwarte 'models' als Objekt.", modelleAktiv:"Modelle aktiv", totalKwp:"kWp gesamt" },
-    en:{ title:"Price Calculator", montagesystem:"Mounting System", systemKategorie:"System Category", flat:"CompactFLAT", flatSub:"Flat Roof", pitch:"CompactPITCH", pitchSub:"Pitched Roof", metal:"CompactMETAL", metalSub:"Metal Roof · On Request", ground:"CompactGROUND", groundSub:"Ground-Mount · On Request", system:"System", klemmung:"Clamping", ausrichtung:"Orientation", ksk:"Short Side", lsk:"Long Side", ow:"E/W", sued:"South", alpineLabel:"Alpine", alpineSub:"reinforced for high snow loads", standortLasten:"Location & Loads", land:"Country", windlast:"Wind Load", schneelast:"Snow Load", flatHinweis:"Snow load has no effect for flat roof systems", modulKonditionen:"Module & Terms", leistung:"Power (Wp)", referenzmodul:"Reference module", anzahlModule:"Number of Modules", rabatt:"Customer Discount (%)", output:"Result", kostenProKwp:"Cost per kWp", gesamtkosten:"Total Cost", moduleLabel:"modules", kostenProModul:"per Module", extrapoliert:"Extrapolated", preisAufAnfrage:"Price on Request", modellNichtVerfuegbar:"Model not available", modellpreis:"Model price", laenderfaktor:"Country factor", rabattLine:"Discount", disclaimerTitle:"All data without guarantee", disclaimerBody:"Does not replace structural planning. List prices per kWp, as of", backendTitle:"Backend · Configuration", zuruecksetzen:"Reset", modellKonfig:"Model Configuration (JSON)", aktuellLaden:"Load", importieren:"Import", jsonPlaceholder:"Paste JSON from regression script here…", laenderfaktoren:"Country Factors", laenderfaktorenSub:"Multiplicative markup on €/kWp.", aktuellesModell:"Model:", modelltyp:"Type", windRange:"Wind range", snowRange:"Snow range", anfrageWind:"Wind threshold", anfrageSchnee:"Snow threshold", datenpunkte:"Data points", fixSnow:"fix 0.1", adminLogin:"Admin Login", passwort:"Password", abbrechen:"Cancel", loginBtn:"Login", sessionHinweis:"Session expires after 4h.", falschesPasswort:"Wrong password", datenInAktualisierung:"Data being updated – price on request", bitteVertriebAnfragen:"Please contact sales.", kostenfunktionenFolgen:(s)=>`Cost functions for ${s} coming soon.`, countries:{ DE:"Germany", AT:"Austria", CH:"Switzerland", OTHER:"International" }, backend:"Backend", confirmReset:"Reset configuration and factors to default?", modelleImportiert:(n)=>`✓ ${n} models imported.`, jsonError:"JSON error:", expectModels:"Expected 'models' as object.", modelleAktiv:"models active", totalKwp:"kWp total" },
-    it:{ title:"Calcolatore Prezzi", montagesystem:"Sistema di Montaggio", systemKategorie:"Categoria Sistema", flat:"CompactFLAT", flatSub:"Tetto Piano", pitch:"CompactPITCH", pitchSub:"Tetto Inclinato", metal:"CompactMETAL", metalSub:"Lamiera · Su richiesta", ground:"CompactGROUND", groundSub:"A Terra · Su richiesta", system:"Sistema", klemmung:"Morsetto", ausrichtung:"Orientamento", ksk:"Lato Corto", lsk:"Lato Lungo", ow:"E/O", sued:"Sud", alpineLabel:"Alpine", alpineSub:"rinforzata per carichi neve elevati", standortLasten:"Luogo & Carichi", land:"Paese", windlast:"Carico Vento", schneelast:"Carico Neve", flatHinweis:"Il carico neve non influisce sui sistemi a tetto piano", modulKonditionen:"Modulo & Condizioni", leistung:"Potenza (Wp)", referenzmodul:"Modulo di riferimento", anzahlModule:"Numero Moduli", rabatt:"Sconto Cliente (%)", output:"Risultato", kostenProKwp:"Costo per kWp", gesamtkosten:"Costo Totale", moduleLabel:"moduli", kostenProModul:"per Modulo", extrapoliert:"Estrapolato", preisAufAnfrage:"Prezzo su Richiesta", modellNichtVerfuegbar:"Modello non disponibile", modellpreis:"Prezzo modello", laenderfaktor:"Fattore paese", rabattLine:"Sconto", disclaimerTitle:"Tutti i dati senza garanzia", disclaimerBody:"Non sostituisce la progettazione strutturale. Listini al kWp, aggiornato", backendTitle:"Backend · Configurazione", zuruecksetzen:"Reset", modellKonfig:"Configurazione Modelli (JSON)", aktuellLaden:"Carica", importieren:"Importa", jsonPlaceholder:"Incolla JSON dallo script di regressione qui…", laenderfaktoren:"Fattori paese", laenderfaktorenSub:"Si applicano moltiplicativamente al valore €/kWp.", aktuellesModell:"Modello:", modelltyp:"Tipo", windRange:"Range vento", snowRange:"Range neve", anfrageWind:"Soglia vento", anfrageSchnee:"Soglia neve", datenpunkte:"Punti dati", fixSnow:"fix 0.1", adminLogin:"Login Admin", passwort:"Password", abbrechen:"Annulla", loginBtn:"Accedi", sessionHinweis:"La sessione scade dopo 4h.", falschesPasswort:"Password errata", datenInAktualisierung:"Dati in aggiornamento – prezzo su richiesta", bitteVertriebAnfragen:"Contattare il commerciale.", kostenfunktionenFolgen:(s)=>`Funzioni di costo per ${s} in arrivo.`, countries:{ DE:"Germania", AT:"Austria", CH:"Svizzera", OTHER:"Internazionale" }, backend:"Backend", confirmReset:"Ripristinare configurazione e fattori predefiniti?", modelleImportiert:(n)=>`✓ ${n} modelli importati.`, jsonError:"Errore JSON:", expectModels:"Atteso 'models' come oggetto.", modelleAktiv:"modelli attivi", totalKwp:"kWp totale" }
+    de:{ title:"Richtpreis-Rechner", montagesystem:"Montagesystem", systemKategorie:"System-Kategorie", flat:"CompactFLAT", flatSub:"Flachdach", pitch:"CompactPITCH", pitchSub:"Schrägdach", metal:"CompactMETAL", metalSub:"Blechdach", ground:"CompactGROUND", groundSub:"Freifläche", system:"System", klemmung:"Klemmung", ausrichtung:"Ausrichtung", ksk:"Kurze Seite", lsk:"Lange Seite", ow:"O/W", sued:"Süd", alpineLabel:"Alpine", alpineSub:"verstärkt für hohe Schneelasten", standortLasten:"Standort & Lasten", land:"Land", windlast:"Windlast", schneelast:"Schneelast", flatHinweis:"Schneelast ohne Einfluss bei Flachdachsystem", modulKonditionen:"Modul & Konditionen", leistung:"Leistung (Wp)", referenzmodul:"Referenzmodul", anzahlModule:"Anzahl Module", rabatt:"Kundenrabatt (%)", output:"Ergebnis", kostenProKwp:"Kosten pro kWp", gesamtkosten:"Gesamtkosten", moduleLabel:"Module", kostenProModul:"pro Modul", extrapoliert:"Extrapoliert", preisAufAnfrage:"Preis auf Anfrage", modellNichtVerfuegbar:"Modell nicht verfügbar", modellpreis:"Modellpreis", laenderfaktor:"Länderfaktor", rabattLine:"Rabatt", disclaimerTitle:"Alle Angaben ohne Gewähr", disclaimerBody:"Ersetzt keine statische Planung. Listenpreise je kWp, Stand", backendTitle:"Backend · Konfiguration", zuruecksetzen:"Zurücksetzen", modellKonfig:"Modell-Konfiguration (JSON)", aktuellLaden:"Laden", importieren:"Importieren", jsonPlaceholder:"JSON aus Regression-Skript hier einfügen…", laenderfaktoren:"Länderfaktoren", laenderfaktorenSub:"Multiplikativer Aufschlag auf €/kWp.", aktuellesModell:"Modell:", modelltyp:"Typ", windRange:"Wind-Range", snowRange:"Schnee-Range", anfrageWind:"Anfrage Wind", anfrageSchnee:"Anfrage Schnee", datenpunkte:"Datenpunkte", fixSnow:"fix 0.1", adminLogin:"Admin-Login", passwort:"Passwort", abbrechen:"Abbrechen", loginBtn:"Login", sessionHinweis:"Session läuft nach 4h ab.", falschesPasswort:"Falsches Passwort", datenInAktualisierung:"Daten in Aktualisierung", bitteVertriebAnfragen:"Bitte Vertrieb anfragen.", kostenfunktionenFolgen:(s)=>`Kostenfunktionen für ${s} folgen.`, countries:{ DE:"Deutschland", AT:"Österreich", CH:"Schweiz", OTHER:"International" }, backend:"Backend", confirmReset:"Konfiguration und Faktoren auf Default zurücksetzen?", modelleImportiert:(n)=>`✓ ${n} Modelle importiert.`, jsonError:"JSON-Fehler:", expectModels:"Erwarte 'models' als Objekt.", modelleAktiv:"Modelle aktiv", totalKwp:"kWp gesamt" },
+    en:{ title:"Price Calculator", montagesystem:"Mounting System", systemKategorie:"System Category", flat:"CompactFLAT", flatSub:"Flat Roof", pitch:"CompactPITCH", pitchSub:"Pitched Roof", metal:"CompactMETAL", metalSub:"Metal Roof", ground:"CompactGROUND", groundSub:"Ground-Mount", system:"System", klemmung:"Clamping", ausrichtung:"Orientation", ksk:"Short Side", lsk:"Long Side", ow:"E/W", sued:"South", alpineLabel:"Alpine", alpineSub:"reinforced for high snow loads", standortLasten:"Location & Loads", land:"Country", windlast:"Wind Load", schneelast:"Snow Load", flatHinweis:"Snow load has no effect for flat roof systems", modulKonditionen:"Module & Terms", leistung:"Power (Wp)", referenzmodul:"Reference module", anzahlModule:"Number of Modules", rabatt:"Customer Discount (%)", output:"Result", kostenProKwp:"Cost per kWp", gesamtkosten:"Total Cost", moduleLabel:"modules", kostenProModul:"per Module", extrapoliert:"Extrapolated", preisAufAnfrage:"Price on Request", modellNichtVerfuegbar:"Model not available", modellpreis:"Model price", laenderfaktor:"Country factor", rabattLine:"Discount", disclaimerTitle:"All data without guarantee", disclaimerBody:"Does not replace structural planning. List prices per kWp, as of", backendTitle:"Backend · Configuration", zuruecksetzen:"Reset", modellKonfig:"Model Configuration (JSON)", aktuellLaden:"Load", importieren:"Import", jsonPlaceholder:"Paste JSON from regression script here…", laenderfaktoren:"Country Factors", laenderfaktorenSub:"Multiplicative markup on €/kWp.", aktuellesModell:"Model:", modelltyp:"Type", windRange:"Wind range", snowRange:"Snow range", anfrageWind:"Wind threshold", anfrageSchnee:"Snow threshold", datenpunkte:"Data points", fixSnow:"fix 0.1", adminLogin:"Admin Login", passwort:"Password", abbrechen:"Cancel", loginBtn:"Login", sessionHinweis:"Session expires after 4h.", falschesPasswort:"Wrong password", datenInAktualisierung:"Data being updated", bitteVertriebAnfragen:"Please contact sales.", kostenfunktionenFolgen:(s)=>`Cost functions for ${s} coming soon.`, countries:{ DE:"Germany", AT:"Austria", CH:"Switzerland", OTHER:"International" }, backend:"Backend", confirmReset:"Reset configuration and factors to default?", modelleImportiert:(n)=>`✓ ${n} models imported.`, jsonError:"JSON error:", expectModels:"Expected 'models' as object.", modelleAktiv:"models active", totalKwp:"kWp total" },
+    it:{ title:"Calcolatore Prezzi", montagesystem:"Sistema di Montaggio", systemKategorie:"Categoria Sistema", flat:"CompactFLAT", flatSub:"Tetto Piano", pitch:"CompactPITCH", pitchSub:"Tetto Inclinato", metal:"CompactMETAL", metalSub:"Lamiera", ground:"CompactGROUND", groundSub:"A Terra", system:"Sistema", klemmung:"Morsetto", ausrichtung:"Orientamento", ksk:"Lato Corto", lsk:"Lato Lungo", ow:"E/O", sued:"Sud", alpineLabel:"Alpine", alpineSub:"rinforzata per carichi neve elevati", standortLasten:"Luogo & Carichi", land:"Paese", windlast:"Carico Vento", schneelast:"Carico Neve", flatHinweis:"Il carico neve non influisce sui sistemi a tetto piano", modulKonditionen:"Modulo & Condizioni", leistung:"Potenza (Wp)", referenzmodul:"Modulo di riferimento", anzahlModule:"Numero Moduli", rabatt:"Sconto Cliente (%)", output:"Risultato", kostenProKwp:"Costo per kWp", gesamtkosten:"Costo Totale", moduleLabel:"moduli", kostenProModul:"per Modulo", extrapoliert:"Estrapolato", preisAufAnfrage:"Prezzo su Richiesta", modellNichtVerfuegbar:"Modello non disponibile", modellpreis:"Prezzo modello", laenderfaktor:"Fattore paese", rabattLine:"Sconto", disclaimerTitle:"Tutti i dati senza garanzia", disclaimerBody:"Non sostituisce la progettazione strutturale. Listini al kWp, aggiornato", backendTitle:"Backend · Configurazione", zuruecksetzen:"Reset", modellKonfig:"Configurazione Modelli (JSON)", aktuellLaden:"Carica", importieren:"Importa", jsonPlaceholder:"Incolla JSON dallo script di regressione qui…", laenderfaktoren:"Fattori paese", laenderfaktorenSub:"Si applicano moltiplicativamente al valore €/kWp.", aktuellesModell:"Modello:", modelltyp:"Tipo", windRange:"Range vento", snowRange:"Range neve", anfrageWind:"Soglia vento", anfrageSchnee:"Soglia neve", datenpunkte:"Punti dati", fixSnow:"fix 0.1", adminLogin:"Login Admin", passwort:"Password", abbrechen:"Annulla", loginBtn:"Accedi", sessionHinweis:"La sessione scade dopo 4h.", falschesPasswort:"Password errata", datenInAktualisierung:"Dati in aggiornamento", bitteVertriebAnfragen:"Contattare il commerciale.", kostenfunktionenFolgen:(s)=>`Funzioni di costo per ${s} in arrivo.`, countries:{ DE:"Germania", AT:"Austria", CH:"Svizzera", OTHER:"Internazionale" }, backend:"Backend", confirmReset:"Ripristinare configurazione e fattori predefiniti?", modelleImportiert:(n)=>`✓ ${n} modelli importati.`, jsonError:"Errore JSON:", expectModels:"Atteso 'models' come oggetto.", modelleAktiv:"modelli attivi", totalKwp:"kWp totale" }
   };
 
-  // ── MATH ───────────────────────────────────────────────────────────────
+  // ── MATH ───────────────────────────────────────────────────────
   function evalPoly(coef, x) { let y=0; for(const c of coef) y=y*x+c; return y; }
-  function makeKey(kat, sys, aus, klem) { return kat==="Pitch" ? `Pitch|${sys}|—|—` : `Flat|${sys}|${aus}|${klem}`; }
+  function makeKey(kat, sys, aus, klem) {
+    if(kat==="Pitch"||kat==="Metal") return `${kat}|${sys}|—|—`;
+    return `Flat|${sys}|${aus}|${klem}`;
+  }
 
   function richtpreisProKwp({ kategorie, system, ausrichtung, klemmung, schnee, wind, config, t }) {
-    if(kategorie==="METAL"||kategorie==="GROUND") return { preis:null, status:"anfrage", meta:{ reason: t?.datenInAktualisierung||"Daten in Aktualisierung" } };
+    if(kategorie==="GROUND") return { preis:null, status:"anfrage", meta:{ reason: t?.datenInAktualisierung||"Daten in Aktualisierung" } };
     const key=makeKey(kategorie,system,ausrichtung,klemmung);
     const m=config.models[key];
     if(!m) return { preis:null, status:"unbekannt", meta:{ key, reason:"—" } };
+    if(m.type==="no_data") return { preis:null, status:"anfrage", meta:{ key, grund: t?.bitteVertriebAnfragen||"Anfrage erforderlich" } };
     if(m.wind_anfrage_threshold!=null && wind>=m.wind_anfrage_threshold) return { preis:null, status:"anfrage", meta:{ key, grund:`${t?.windlast||"Wind"} ≥ ${m.wind_anfrage_threshold} kN/m²` } };
     if(m.snow_anfrage_threshold!=null && schnee>=m.snow_anfrage_threshold) return { preis:null, status:"anfrage", meta:{ key, grund:`${t?.schneelast||"Schnee"} ≥ ${m.snow_anfrage_threshold} kN/m²` } };
     let preis;
@@ -296,22 +369,23 @@
   }
 
   function indexConfig(config) {
-    const flat={}, pitch=[];
+    const flat={}, pitch=[], metal=[];
     for(const [key,m] of Object.entries(config.models)) {
       if(m.kategorie==="Flat") {
         if(!flat[m.system]) flat[m.system]={ system:m.system, variants:[] };
         flat[m.system].variants.push({ key, klemmung:m.klemmung, ausrichtung:m.ausrichtung });
       } else if(m.kategorie==="Pitch") pitch.push({ key, system:m.system });
+      else if(m.kategorie==="Metal") metal.push({ key, system:m.system });
     }
     for(const sys of Object.values(flat)) {
       sys.klemmungen=[...new Set(sys.variants.map(v=>v.klemmung))];
       sys.ausrichtungen=[...new Set(sys.variants.map(v=>v.ausrichtung))];
     }
-    return { flat, pitch };
+    return { flat, pitch, metal };
   }
   const clone = o => JSON.parse(JSON.stringify(o));
 
-  // ── ANIMATED NUMBER ────────────────────────────────────────────────────
+  // ── ANIMATED NUMBER ────────────────────────────────────────────
   function useAnimatedNumber(target, duration=350) {
     const [display, setDisplay] = useState(target);
     const animRef = useRef(null);
@@ -332,7 +406,7 @@
     return display;
   }
 
-  // ── ICON ───────────────────────────────────────────────────────────────
+  // ── ICON ───────────────────────────────────────────────────────
   const Icon = ({ name, size=18, style={} }) => {
     const ref = useRef(null);
     useEffect(() => {
@@ -346,106 +420,18 @@
     return <span ref={ref} className="ico" style={{ width:size, height:size, ...style }} />;
   };
 
-  // ── SOLAR GRID ─────────────────────────────────────────────────────────
-  const SolarGrid = ({ moduleCount, maxModules=200, kwp=0 }) => {
-    const COLS=9, ROWS=5, TOTAL=COLS*ROWS;
-    const W=38, H=26, GAP=4;
-    const svgW=COLS*(W+GAP)-GAP+2, svgH=ROWS*(H+GAP)-GAP+2;
-    const active=Math.round(Math.min(moduleCount/maxModules,1)*TOTAL);
-    const [tick, setTick] = useState(0);
-    useEffect(() => { const id=setInterval(()=>setTick(t=>t+1),1800); return ()=>clearInterval(id); }, []);
-
-    return (
-      <div style={{ position:'relative' }}>
-        {/* Sun */}
-        <div style={{ position:'absolute', top:-28, right:-8, display:'flex', alignItems:'center', gap:6 }}>
-          <div style={{ position:'relative', width:32, height:32 }}>
-            <svg width="32" height="32" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="8" fill="var(--amber)" opacity="0.9"/>
-              <g style={{ animation:'sunSpin 12s linear infinite', transformOrigin:'16px 16px' }}>
-                {[0,45,90,135,180,225,270,315].map(a => {
-                  const r=Math.PI*a/180;
-                  const x1=16+11*Math.cos(r), y1=16+11*Math.sin(r);
-                  const x2=16+14*Math.cos(r), y2=16+14*Math.sin(r);
-                  return <line key={a} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--amber)" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>;
-                })}
-              </g>
-              <circle cx="16" cy="16" r="11" fill="none" stroke="var(--amber)" strokeWidth="0.5" opacity="0.3"/>
-            </svg>
-          </div>
-          <div style={{ textAlign:'right' }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:18, fontWeight:600, color:'var(--amber)', lineHeight:1 }}>
-              {kwp.toFixed(1)}
-            </div>
-            <div style={{ fontSize:9, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.1em' }}>kWp</div>
-          </div>
-        </div>
-
-        <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ display:'block', marginTop:16 }}>
-          <defs>
-            <filter id="panelGlow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <linearGradient id="activeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#5CE1E6" stopOpacity="0.9"/>
-              <stop offset="100%" stopColor="#3BC8CD" stopOpacity="0.75"/>
-            </linearGradient>
-          </defs>
-
-          {Array.from({length:TOTAL}).map((_,i) => {
-            const col=i%COLS, row=Math.floor(i/COLS);
-            const x=col*(W+GAP)+1, y=row*(H+GAP)+1;
-            const isActive=i<active;
-            const delayS=((i*0.07)%2).toFixed(2);
-            return (
-              <g key={i}>
-                <rect x={x} y={y} width={W} height={H} rx={2}
-                  fill={isActive ? 'url(#activeGrad)' : 'rgba(255,255,255,0.04)'}
-                  stroke={isActive ? 'rgba(92,225,230,0.5)' : 'rgba(255,255,255,0.06)'}
-                  strokeWidth={0.5}
-                  style={isActive ? { animation:`solarPulse 2.4s ${delayS}s ease-in-out infinite` } : {}}
-                />
-                {isActive && (
-                  <g stroke="rgba(0,0,0,0.25)" strokeWidth={0.5}>
-                    <line x1={x+W*0.33} y1={y} x2={x+W*0.33} y2={y+H}/>
-                    <line x1={x+W*0.66} y1={y} x2={x+W*0.66} y2={y+H}/>
-                    <line x1={x} y1={y+H*0.5} x2={x+W} y2={y+H*0.5}/>
-                  </g>
-                )}
-                {isActive && (
-                  <rect x={x+2} y={y+2} width={8} height={3} rx={1} fill="rgba(255,255,255,0.2)"/>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:8 }}>
-          <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--text3)' }}>
-            {active}/{TOTAL} panels
-          </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <div style={{ width:10, height:10, borderRadius:2, background:'url(#activeGrad)', backgroundColor:'rgba(92,225,230,0.7)' }}></div>
-            <span style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.08em' }}>active</span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ── SLIDER FIELD ───────────────────────────────────────────────────────
+  // ── SLIDER FIELD ───────────────────────────────────────────────
   const SliderField = ({ label, value, min, max, step, onChange, unit, iconName }) => {
-    const pct=((value-min)/(max-min)*100).toFixed(1);
-    const bg=`linear-gradient(to right, var(--cyan) 0%, var(--cyan) ${pct}%, rgba(255,255,255,0.08) ${pct}%, rgba(255,255,255,0.08) 100%)`;
+    const pct = ((value-min)/(max-min)*100).toFixed(1);
+    const bg = `linear-gradient(to right, var(--cyan) 0%, var(--cyan) ${pct}%, var(--border2) ${pct}%, var(--border2) 100%)`;
     return (
       <div>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            <Icon name={iconName} size={15} style={{ color:'var(--text3)' }}/>
+            <Icon name={iconName} size={13} style={{ color:'var(--text3)' }}/>
             <span style={{ fontSize:13, fontWeight:500, color:'var(--text2)' }}>{label}</span>
           </div>
-          <div style={{ fontFamily:'var(--mono)', fontSize:14, fontWeight:600, color:'var(--cyan)', background:'var(--cyan-dim)', border:'1px solid rgba(92,225,230,0.2)', borderRadius:6, padding:'3px 10px' }}>
+          <div style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--cyan)', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', padding:'3px 9px', fontVariantNumeric:'tabular-nums' }}>
             {value.toFixed(1)} {unit}
           </div>
         </div>
@@ -461,10 +447,10 @@
     );
   };
 
-  // ── SEGMENTED ─────────────────────────────────────────────────────────
+  // ── SEGMENTED ─────────────────────────────────────────────────
   const Segmented = ({ value, onChange, options }) => (
     <div className="seg">
-      {options.map((o,i) => (
+      {options.map(o => (
         <button key={o.value} className={`seg-btn${value===o.value?' active':''}${o.disabled?' ':''}`}
           disabled={o.disabled} onClick={()=>!o.disabled&&onChange(o.value)}>
           {o.label}
@@ -473,7 +459,7 @@
     </div>
   );
 
-  // ── MAIN APP ───────────────────────────────────────────────────────────
+  // ── MAIN APP ───────────────────────────────────────────────────
   function AerocompactCalculator() {
     const [lang, setLang] = useState(() => { try{ const s=localStorage.getItem(LS_LANG); if(s&&T[s]) return s; }catch(e){} return "de"; });
     useEffect(()=>{ try{ localStorage.setItem(LS_LANG,lang); }catch(e){} },[lang]);
@@ -507,6 +493,7 @@
     const [flatKlemmung, setFlatKlemmung] = useState("KSK");
     const [flatAusrichtung, setFlatAusrichtung] = useState("Süd");
     const [pitchSystem, setPitchSystem] = useState(idx.pitch[0]?.system||"XM-F");
+    const [metalSystem, setMetalSystem] = useState(idx.metal[0]?.system||"TS");
     useEffect(()=>{ const sys=idx.flat[flatSystem]; if(!sys) return; if(!sys.klemmungen.includes(flatKlemmung)) setFlatKlemmung(sys.klemmungen[0]); if(!sys.ausrichtungen.includes(flatAusrichtung)) setFlatAusrichtung(sys.ausrichtungen[0]); },[flatSystem,idx]);
 
     const [windLoad, setWindLoad] = useState(0.5);
@@ -523,13 +510,14 @@
       let sysName,ausrichtung,klemmung;
       if(category==="Flat") { sysName=(alpine&&hasAlpineVariant(flatSystem))?`${flatSystem} alpine`:flatSystem; ausrichtung=flatAusrichtung; klemmung=flatKlemmung; }
       else if(category==="Pitch") { sysName=pitchSystem; ausrichtung="—"; klemmung="—"; }
+      else if(category==="Metal") { sysName=metalSystem; ausrichtung="—"; klemmung="—"; }
       const effectiveSchnee=category==="Flat"?0.1:snowLoad;
       const r=richtpreisProKwp({ kategorie:category, system:sysName, ausrichtung, klemmung, wind:windLoad, schnee:effectiveSchnee, config, t });
       if(r.preis==null) return { ...r, totalKwp:(moduleCount*modulePower)/1000 };
       const cF=countryFactors[country]??1.0, dF=1-(discount/100);
       const pricePerKwp=r.preis*cF*dF, totalKwp=(moduleCount*modulePower)/1000;
       return { ...r, basePricePerKwp:r.preis, countryFactor:cF, discountFactor:dF, pricePerKwp, pricePerModule:pricePerKwp*(modulePower/1000), totalCost:pricePerKwp*totalKwp, totalKwp, systemDisplay:category==="Flat"?`${sysName} · ${klemmung} · ${ausrichtung}`:sysName };
-    },[category,flatSystem,flatKlemmung,flatAusrichtung,pitchSystem,alpine,windLoad,snowLoad,country,modulePower,moduleCount,discount,config,countryFactors,lang]);
+    },[category,flatSystem,flatKlemmung,flatAusrichtung,pitchSystem,metalSystem,alpine,windLoad,snowLoad,country,modulePower,moduleCount,discount,config,countryFactors,lang]);
 
     const animKwp = useAnimatedNumber(result.totalKwp||0);
     const animPriceKwp = useAnimatedNumber(result.pricePerKwp||0);
@@ -545,33 +533,35 @@
     const currentModel=result.meta?.m;
 
     const CATS = [
-      { id:"Flat", icon:"building-2", label:t.flat, sub:t.flatSub },
-      { id:"Pitch", icon:"triangle", label:t.pitch, sub:t.pitchSub },
-      { id:"METAL", icon:"layers", label:t.metal, sub:t.metalSub },
-      { id:"GROUND", icon:"sun", label:t.ground, sub:t.groundSub },
+      { id:"Flat",   label:t.flat,   sub:t.flatSub,   req:false },
+      { id:"Pitch",  label:t.pitch,  sub:t.pitchSub,  req:false },
+      { id:"Metal",  label:t.metal,  sub:t.metalSub,  req:false },
+      { id:"GROUND", label:t.ground, sub:t.groundSub, req:true  },
     ];
 
     return (
       <div style={{ minHeight:'100vh' }}>
+
         {/* ── HEADER ── */}
         <header className="hdr">
-          <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 24px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-              <img src="logo.png" alt="AEROCOMPACT" style={{ height:22, filter:'invert(1) brightness(1.1)' }}/>
-              <div style={{ width:1, height:24, background:'var(--border)' }}></div>
-              <span style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.18em', color:'var(--text3)' }}>{t.title}</span>
+          <div className="hdr-inner">
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <img src="logo.png" alt="AEROCOMPACT" style={{ height:20, filter:'invert(1) brightness(1.1)' }}/>
+              <div style={{ width:1, height:18, background:'var(--border)' }}/>
+              <span style={{ fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.18em', color:'var(--text3)' }}>{t.title}</span>
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               {["de","en","it"].map(code=>(
-                <button key={code} className={`lang-btn${lang===code?' active':''}`} onClick={()=>setLang(code)} style={{ color:lang===code?'#000':'var(--text3)' }}>{code}</button>
+                <button key={code} className={`lang-btn${lang===code?' active':''}`} onClick={()=>setLang(code)}>{code}</button>
               ))}
               {isAdmin && (<>
-                <div style={{ width:1, height:18, background:'var(--border)', margin:'0 4px' }}></div>
-                <button className={`btn btn-ghost`} onClick={()=>setShowBackend(s=>!s)} style={{ padding:'6px 12px', fontSize:11, gap:5, background:showBackend?'var(--cyan-dim)':undefined, borderColor:showBackend?'rgba(92,225,230,0.4)':undefined }}>
-                  <Icon name="settings" size={13}/> {t.backend}
+                <div style={{ width:1, height:16, background:'var(--border)', margin:'0 2px' }}/>
+                <button className="btn btn-ghost" onClick={()=>setShowBackend(s=>!s)}
+                  style={{ padding:'5px 10px', fontSize:10, gap:4, background:showBackend?'var(--surface2)':undefined, borderColor:showBackend?'var(--border2)':undefined }}>
+                  <Icon name="settings" size={12}/> {t.backend}
                 </button>
-                <button className="btn btn-ghost" onClick={doLogout} style={{ padding:'6px 10px' }} title="Logout">
-                  <Icon name="log-out" size={13}/>
+                <button className="btn btn-ghost" onClick={doLogout} style={{ padding:'5px 8px' }} title="Logout">
+                  <Icon name="log-out" size={12}/>
                 </button>
               </>)}
             </div>
@@ -580,33 +570,33 @@
 
         {/* ── BACKEND ── */}
         {isAdmin && showBackend && (
-          <section style={{ borderBottom:'1px solid rgba(92,225,230,0.15)', background:'rgba(92,225,230,0.02)', padding:'28px 24px' }}>
+          <section style={{ borderBottom:'1px solid var(--border)', background:'var(--bg2)', padding:'24px 32px' }}>
             <div style={{ maxWidth:1200, margin:'0 auto' }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <Icon name="database" size={16} style={{ color:'var(--cyan)' }}/>
-                  <span style={{ fontSize:14, fontWeight:600, color:'var(--cyan)', textTransform:'uppercase', letterSpacing:'0.1em' }}>{t.backendTitle}</span>
+                <div className="sec-hdr">
+                  <Icon name="database" size={13} style={{ color:'var(--text3)' }}/>
+                  {t.backendTitle}
                 </div>
-                <button className="btn btn-ghost" onClick={resetAll} style={{ fontSize:11, gap:5 }}>
-                  <Icon name="rotate-ccw" size={12}/> {t.zuruecksetzen}
+                <button className="btn btn-ghost" onClick={resetAll} style={{ fontSize:10, gap:4 }}>
+                  <Icon name="rotate-ccw" size={11}/> {t.zuruecksetzen}
                 </button>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
                 <div className="card" style={{ padding:20 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-                    <span style={{ fontSize:12, fontWeight:600, color:'var(--text2)' }}>{t.modellKonfig}</span>
+                    <span style={{ fontSize:11, fontWeight:600, color:'var(--text2)' }}>{t.modellKonfig}</span>
                     <div style={{ display:'flex', gap:6 }}>
-                      <button className="btn btn-ghost" onClick={exportConfig} style={{ fontSize:10, padding:'5px 10px', gap:4 }}><Icon name="download" size={11}/> {t.aktuellLaden}</button>
-                      <button className="btn btn-primary" onClick={importConfig} disabled={!jsonDraft} style={{ fontSize:10, padding:'5px 10px', gap:4 }}><Icon name="upload" size={11}/> {t.importieren}</button>
+                      <button className="btn btn-ghost" onClick={exportConfig} style={{ fontSize:10, padding:'4px 9px', gap:3 }}><Icon name="download" size={11}/> {t.aktuellLaden}</button>
+                      <button className="btn btn-primary" onClick={importConfig} disabled={!jsonDraft} style={{ fontSize:10, padding:'4px 9px', gap:3 }}><Icon name="upload" size={11}/> {t.importieren}</button>
                     </div>
                   </div>
-                  <textarea value={jsonDraft} onChange={e=>{setJsonDraft(e.target.value);setJsonError("");setJsonSuccess("");}} placeholder={t.jsonPlaceholder} style={{ height:160, fontSize:11 }}/>
-                  {jsonError && <p style={{ color:'#f87171', fontSize:11, marginTop:6 }}>{jsonError}</p>}
-                  {jsonSuccess && <p style={{ color:'#4ade80', fontSize:11, marginTop:6 }}>{jsonSuccess}</p>}
-                  <p style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)', marginTop:6 }}>{config.meta?.stand||"—"} · {Object.keys(config.models).length} {t.modelleAktiv}</p>
+                  <textarea value={jsonDraft} onChange={e=>{setJsonDraft(e.target.value);setJsonError("");setJsonSuccess("");}} placeholder={t.jsonPlaceholder} style={{ height:150 }}/>
+                  {jsonError && <p style={{ color:'var(--err)', fontSize:11, marginTop:6 }}>{jsonError}</p>}
+                  {jsonSuccess && <p style={{ color:'oklch(70% 0.15 145)', fontSize:11, marginTop:6 }}>{jsonSuccess}</p>}
+                  <p style={{ fontSize:10, color:'var(--text3)', fontFamily:'var(--mono)', marginTop:8 }}>{config.meta?.stand||"—"} · {Object.keys(config.models).length} {t.modelleAktiv}</p>
                 </div>
                 <div className="card" style={{ padding:20 }}>
-                  <p style={{ fontSize:12, fontWeight:600, color:'var(--text2)', marginBottom:14 }}>{t.laenderfaktoren}</p>
+                  <p style={{ fontSize:11, fontWeight:600, color:'var(--text2)', marginBottom:14 }}>{t.laenderfaktoren}</p>
                   <table style={{ width:'100%', borderCollapse:'collapse' }}>
                     <thead><tr>
                       <th style={{ fontSize:10, color:'var(--text3)', textAlign:'left', paddingBottom:8, textTransform:'uppercase', letterSpacing:'0.08em' }}>{t.land}</th>
@@ -614,8 +604,8 @@
                     </tr></thead>
                     <tbody>{Object.entries(countryFactors).map(([code,val])=>(
                       <tr key={code} style={{ borderTop:'1px solid var(--border)' }}>
-                        <td style={{ padding:'8px 0', fontSize:12, color:'var(--text2)' }}>{code}</td>
-                        <td style={{ padding:'8px 0', textAlign:'right' }}>
+                        <td style={{ padding:'7px 0', fontSize:12, color:'var(--text2)' }}>{code}</td>
+                        <td style={{ padding:'7px 0', textAlign:'right' }}>
                           <input type="number" step="0.01" className="num-inp" style={{ width:80, fontSize:13 }} value={val} onChange={e=>setCountryFactors({...countryFactors,[code]:parseFloat(e.target.value)||0})}/>
                         </td>
                       </tr>
@@ -625,9 +615,9 @@
                 </div>
               </div>
               {currentModel && (
-                <div className="card" style={{ padding:20, marginTop:16 }}>
-                  <p style={{ fontSize:12, fontWeight:600, color:'var(--text2)', marginBottom:12 }}>
-                    {t.aktuellesModell} <span style={{ color:'var(--cyan)' }}>{result.systemDisplay}</span>
+                <div className="card" style={{ padding:20, marginTop:14 }}>
+                  <p style={{ fontSize:11, fontWeight:600, color:'var(--text2)', marginBottom:12 }}>
+                    {t.aktuellesModell} <span style={{ color:'var(--cyan)', fontFamily:'var(--mono)' }}>{result.systemDisplay}</span>
                   </p>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
                     {[
@@ -653,282 +643,310 @@
         )}
 
         {/* ── MAIN ── */}
-        <main style={{ maxWidth:1200, margin:'0 auto', padding:'40px 24px 80px', display:'flex', gap:28, alignItems:'flex-start' }} className="main-grid">
+        <div className="main-inner" style={{ maxWidth:1200, margin:'0 auto', padding:'36px 32px 80px' }}>
+          <div className="main-cols" style={{ display:'flex', alignItems:'flex-start' }}>
 
-          {/* ── LEFT COL ── */}
-          <div style={{ flex:'0 0 58%', display:'flex', flexDirection:'column', gap:20 }}>
+            {/* ── LEFT COL ── */}
+            <div className="left-col" style={{ flex:'0 0 57%', paddingRight:36, borderRight:'1px solid var(--border)' }}>
+              <div className="card">
 
-            {/* System Category */}
-            <div className="card" style={{ padding:28 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
-                <Icon name="layers" size={16} style={{ color:'var(--cyan)' }}/>
-                <span style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.14em', color:'var(--text2)' }}>{t.montagesystem}</span>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-                {CATS.map(cat=>(
-                  <button key={cat.id} className={`cat-card${category===cat.id?' active':''}`} onClick={()=>setCategory(cat.id)}>
-                    <span className="cat-icon"><Icon name={cat.icon} size={18}/></span>
-                    <span>
-                      <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', marginBottom:2 }}>{cat.label}</div>
-                      <div style={{ fontSize:11, color:'var(--text3)' }}>{cat.sub}</div>
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* System detail */}
-              {category==="Flat" && (
-                <div className="fade-up" style={{ borderTop:'1px solid var(--border)', paddingTop:20, display:'flex', flexDirection:'column', gap:16 }}>
-                  <div>
-                    <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                      {flatSystemKeysVisible.map(s=>(
-                        <button key={s} className={`chip${flatSystem===s?' active':''}`} onClick={()=>setFlatSystem(s)}>{s}</button>
-                      ))}
-                    </div>
+                {/* Section 1: Mounting System */}
+                <div style={{ padding:'24px 24px 20px' }}>
+                  <div className="sec-hdr" style={{ marginBottom:16 }}>
+                    <Icon name="layers" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.montagesystem}
                   </div>
-                  {hasAlpineVariant(flatSystem) && (
-                    <div className={`toggle-wrap${alpine?' on':''}`} onClick={()=>setAlpine(a=>!a)}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <Icon name="mountain-snow" size={16} style={{ color:alpine?'var(--cyan)':'var(--text3)' }}/>
-                        <div>
-                          <div style={{ fontSize:13, fontWeight:600, color:alpine?'var(--text)':'var(--text2)' }}>{t.alpineLabel}</div>
-                          <div style={{ fontSize:11, color:'var(--text3)' }}>{t.alpineSub}</div>
+
+                  {/* Category tabs */}
+                  <div className="cat-tabs">
+                    {CATS.map(cat=>(
+                      <button key={cat.id} className={`cat-tab${category===cat.id?' cat-tab-active':''}`} onClick={()=>setCategory(cat.id)}>
+                        <span className="cat-tab-name">
+                          {cat.label}
+                          {cat.req && <span className="cat-req-dot"/>}
+                        </span>
+                        <span className="cat-tab-sub">{cat.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Flat detail */}
+                  {category==="Flat" && (
+                    <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                      <div>
+                        <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                          {flatSystemKeysVisible.map(s=>(
+                            <button key={s} className={`chip${flatSystem===s?' active':''}`} onClick={()=>setFlatSystem(s)}>{s}</button>
+                          ))}
                         </div>
                       </div>
-                      <div className="toggle-track" style={{ background:alpine?'var(--cyan)':'rgba(255,255,255,0.08)' }}>
-                        <div className="toggle-thumb" style={{ left:alpine?'19px':'3px', background:alpine?'#000':'rgba(255,255,255,0.5)' }}/>
+                      {hasAlpineVariant(flatSystem) && (
+                        <div className={`toggle-wrap${alpine?' on':''}`} onClick={()=>setAlpine(a=>!a)}>
+                          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <Icon name="mountain-snow" size={14} style={{ color:alpine?'var(--cyan)':'var(--text3)' }}/>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:600, color:alpine?'var(--text)':'var(--text2)' }}>{t.alpineLabel}</div>
+                              <div style={{ fontSize:11, color:'var(--text3)' }}>{t.alpineSub}</div>
+                            </div>
+                          </div>
+                          <div className="toggle-track" style={{ background:alpine?'var(--cyan)':'var(--border2)' }}>
+                            <div className="toggle-thumb" style={{ left:alpine?'18px':'2px', background:alpine?'oklch(12% 0.008 200)':'var(--text3)' }}/>
+                          </div>
+                        </div>
+                      )}
+                      {currentFlatSys && (
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                          <div>
+                            <div className="lbl" style={{ marginBottom:8 }}>{t.klemmung}</div>
+                            {currentFlatSys.klemmungen.length>1
+                              ? <Segmented value={flatKlemmung} onChange={setFlatKlemmung} options={["KSK","LSK"].map(k=>({ value:k, label:k==="KSK"?t.ksk:t.lsk, disabled:!currentFlatSys.klemmungen.includes(k) }))}/>
+                              : <div style={{ padding:'8px 11px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.klemmungen[0]==="KSK"?t.ksk:currentFlatSys.klemmungen[0]==="LSK"?t.lsk:currentFlatSys.klemmungen[0]}</div>
+                            }
+                          </div>
+                          <div>
+                            <div className="lbl" style={{ marginBottom:8 }}>{t.ausrichtung}</div>
+                            {currentFlatSys.ausrichtungen.length>1
+                              ? <Segmented value={flatAusrichtung} onChange={setFlatAusrichtung} options={["Ost/West","Süd"].map(a=>({ value:a, label:a==="Ost/West"?t.ow:t.sued, disabled:!currentFlatSys.ausrichtungen.includes(a) }))}/>
+                              : <div style={{ padding:'8px 11px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.ausrichtungen[0]==="Ost/West"?t.ow:currentFlatSys.ausrichtungen[0]==="Süd"?t.sued:currentFlatSys.ausrichtungen[0]}</div>
+                            }
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pitch detail */}
+                  {category==="Pitch" && (
+                    <div className="fade-up">
+                      <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                        {idx.pitch.map(p=>(
+                          <button key={p.system} className={`chip${pitchSystem===p.system?' active':''}`} onClick={()=>setPitchSystem(p.system)}>{p.system}</button>
+                        ))}
                       </div>
                     </div>
                   )}
-                  {currentFlatSys && (
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-                      <div>
-                        <div className="lbl" style={{ marginBottom:8 }}>{t.klemmung}</div>
-                        {currentFlatSys.klemmungen.length>1
-                          ? <Segmented value={flatKlemmung} onChange={setFlatKlemmung} options={["KSK","LSK"].map(k=>({ value:k, label:k==="KSK"?t.ksk:t.lsk, disabled:!currentFlatSys.klemmungen.includes(k) }))}/>
-                          : <div style={{ padding:'9px 12px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.klemmungen[0]==="KSK"?t.ksk:currentFlatSys.klemmungen[0]==="LSK"?t.lsk:currentFlatSys.klemmungen[0]}</div>
-                        }
-                      </div>
-                      <div>
-                        <div className="lbl" style={{ marginBottom:8 }}>{t.ausrichtung}</div>
-                        {currentFlatSys.ausrichtungen.length>1
-                          ? <Segmented value={flatAusrichtung} onChange={setFlatAusrichtung} options={["Ost/West","Süd"].map(a=>({ value:a, label:a==="Ost/West"?t.ow:t.sued, disabled:!currentFlatSys.ausrichtungen.includes(a) }))}/>
-                          : <div style={{ padding:'9px 12px', border:'1px solid var(--border)', borderRadius:'var(--rad-sm)', fontSize:12, color:'var(--text2)' }}>{currentFlatSys.ausrichtungen[0]==="Ost/West"?t.ow:currentFlatSys.ausrichtungen[0]==="Süd"?t.sued:currentFlatSys.ausrichtungen[0]}</div>
-                        }
+
+                  {/* Metal detail */}
+                  {category==="Metal" && (
+                    <div className="fade-up">
+                      <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                        {idx.metal.map(m=>(
+                          <button key={m.system} className={`chip${metalSystem===m.system?' active':''}`} onClick={()=>setMetalSystem(m.system)}>{m.system}</button>
+                        ))}
                       </div>
                     </div>
                   )}
+
+                  {/* Anfrage placeholder */}
+                  {category==="GROUND" && (
+                    <div className="fade-up" style={{ paddingTop:2 }}>
+                      <p style={{ fontSize:13, fontWeight:600, color:'var(--text2)', marginBottom:5 }}>{PLACEHOLDER_CATEGORIES[category].label}</p>
+                      <p style={{ fontSize:12, color:'var(--text3)', marginBottom:10, lineHeight:1.5 }}>{t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}</p>
+                      <span className="badge badge-warn"><Icon name="mail" size={10}/> {t.bitteVertriebAnfragen}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {category==="Pitch" && (
-                <div className="fade-up" style={{ borderTop:'1px solid var(--border)', paddingTop:20 }}>
-                  <div className="lbl" style={{ marginBottom:10 }}>{t.system}</div>
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                    {idx.pitch.map(p=>(
-                      <button key={p.system} className={`chip${pitchSystem===p.system?' active':''}`} onClick={()=>setPitchSystem(p.system)}>{p.system}</button>
-                    ))}
+
+                {/* Section 2: Location & Loads */}
+                <div style={{ padding:'20px 24px', borderTop:'1px solid var(--border)' }}>
+                  <div className="sec-hdr" style={{ marginBottom:18 }}>
+                    <Icon name="map-pin" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.standortLasten}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.land}</div>
+                      <select className="inp" value={country} onChange={e=>setCountry(e.target.value)}>
+                        {Object.keys(countryFactors).map(c=>(
+                          <option key={c} value={c}>{t.countries[c]||c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <SliderField label={t.windlast} value={windLoad} min={0.1} max={3} step={0.1} onChange={setWindLoad} unit="kN/m²" iconName="wind"/>
+                    {(category==="Pitch"||category==="Metal") && (
+                      <SliderField label={t.schneelast} value={snowLoad} min={0.1} max={4} step={0.1} onChange={setSnowLoad} unit="kN/m²" iconName="snowflake"/>
+                    )}
+                    {category==="Flat" && (
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:7, padding:'9px 11px', borderRadius:'var(--rad-sm)', background:'var(--bg2)', border:'1px solid var(--border)' }}>
+                        <Icon name="info" size={12} style={{ color:'var(--text3)', flexShrink:0, marginTop:1 }}/>
+                        <span style={{ fontSize:12, color:'var(--text3)', fontStyle:'italic', lineHeight:1.5 }}>{t.flatHinweis}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-              {(category==="METAL"||category==="GROUND") && (
-                <div className="fade-up" style={{ borderTop:'1px solid var(--border)', paddingTop:20, textAlign:'center', padding:'20px 0 4px' }}>
-                  <div style={{ width:48, height:48, borderRadius:'50%', background:'var(--amber-dim)', border:'1px solid rgba(240,168,48,0.2)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
-                    <Icon name="mail" size={20} style={{ color:'var(--amber)' }}/>
+
+                {/* Section 3: Module & Terms */}
+                <div style={{ padding:'20px 24px 24px', borderTop:'1px solid var(--border)' }}>
+                  <div className="sec-hdr" style={{ marginBottom:18 }}>
+                    <Icon name="zap" size={13} style={{ color:'var(--text3)' }}/>
+                    {t.modulKonditionen}
                   </div>
-                  <p style={{ fontSize:14, fontWeight:600, color:'var(--text2)', marginBottom:6 }}>{PLACEHOLDER_CATEGORIES[category].label}</p>
-                  <p style={{ fontSize:12, color:'var(--text3)', marginBottom:8 }}>{t.kostenfunktionenFolgen(PLACEHOLDER_CATEGORIES[category].systems.join(", "))}</p>
-                  <p style={{ fontSize:12, color:'var(--amber)', fontStyle:'italic' }}>{t.bitteVertriebAnfragen}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Location & Loads */}
-            <div className="card" style={{ padding:28 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:22 }}>
-                <Icon name="map-pin" size={16} style={{ color:'var(--cyan)' }}/>
-                <span style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.14em', color:'var(--text2)' }}>{t.standortLasten}</span>
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:22 }}>
-                <div>
-                  <div className="lbl" style={{ marginBottom:8 }}>{t.land}</div>
-                  <select className="inp" value={country} onChange={e=>setCountry(e.target.value)}>
-                    {Object.keys(countryFactors).map(c=>(
-                      <option key={c} value={c}>{t.countries[c]||c}</option>
-                    ))}
-                  </select>
-                </div>
-                <SliderField label={t.windlast} value={windLoad} min={0.1} max={3} step={0.1} onChange={setWindLoad} unit="kN/m²" iconName="wind"/>
-                {category==="Pitch" && (
-                  <div style={{ borderTop:'1px solid var(--border)', paddingTop:20 }}>
-                    <SliderField label={t.schneelast} value={snowLoad} min={0.1} max={4} step={0.1} onChange={setSnowLoad} unit="kN/m²" iconName="snowflake"/>
-                  </div>
-                )}
-                {category==="Flat" && (
-                  <div style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 14px', borderRadius:'var(--rad-sm)', background:'rgba(255,255,255,0.02)', border:'1px solid var(--border)' }}>
-                    <Icon name="info" size={13} style={{ color:'var(--text3)', flexShrink:0 }}/>
-                    <span style={{ fontSize:12, color:'var(--text3)', fontStyle:'italic' }}>{t.flatHinweis}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Module & Terms */}
-            <div className="card" style={{ padding:28 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:22 }}>
-                <Icon name="zap" size={16} style={{ color:'var(--amber)' }}/>
-                <span style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.14em', color:'var(--text2)' }}>{t.modulKonditionen}</span>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16 }}>
-                <div>
-                  <div className="lbl" style={{ marginBottom:8 }}>{t.leistung}</div>
-                  <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                  <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)' }}>{config.meta?.modul||"—"}</div>
-                </div>
-                <div>
-                  <div className="lbl" style={{ marginBottom:8 }}>{t.anzahlModule}</div>
-                  <input type="number" className="inp num-inp" value={moduleCount} onChange={e=>setModuleCount(Number(e.target.value))} style={{ textAlign:'left' }}/>
-                  <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)' }}>{fmt2(result.totalKwp||0)} kWp</div>
-                </div>
-                <div>
-                  <div className="lbl" style={{ marginBottom:8 }}>{t.rabatt}</div>
-                  <input type="number" min="0" max="100" className="inp num-inp" value={discount} onChange={e=>setDiscount(Number(e.target.value))} style={{ color:'var(--cyan)', textAlign:'left' }}/>
-                  <div style={{ fontSize:10, color:'var(--text3)', marginTop:5 }}>&nbsp;</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── RIGHT COL ── */}
-          <div className="right-col" style={{ flex:'1', position:'sticky', top:80, display:'flex', flexDirection:'column', gap:20 }}>
-
-            {/* Result */}
-            <div className="result-glow" style={{ padding:28 }}>
-              {/* Anfrage */}
-              {(result.status==="anfrage"||result.status==="unbekannt") && (
-                <div className="fade-up">
-                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
-                    <div style={{ width:42, height:42, borderRadius:'50%', background:result.status==="anfrage"?'var(--cyan-dim)':'rgba(248,113,113,0.1)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <Icon name={result.status==="anfrage"?"phone":"alert-triangle"} size={18} style={{ color:result.status==="anfrage"?'var(--cyan)':'#f87171' }}/>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.leistung}</div>
+                      <input type="number" className="inp num-inp" value={modulePower} onChange={e=>setModulePower(Number(e.target.value))} style={{ textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{config.meta?.modul||"—"}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize:16, fontWeight:700, color:'var(--text)', marginBottom:3 }}>
-                        {result.status==="anfrage"?t.preisAufAnfrage:t.modellNichtVerfuegbar}
-                      </div>
-                      <div style={{ fontSize:12, color:'var(--text3)' }}>{result.meta?.grund||result.meta?.reason}</div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.anzahlModule}</div>
+                      <input type="number" className="inp num-inp" value={moduleCount} onChange={e=>setModuleCount(Number(e.target.value))} style={{ textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, fontFamily:'var(--mono)', fontVariantNumeric:'tabular-nums' }}>{fmt2(result.totalKwp||0)} kWp</div>
+                    </div>
+                    <div>
+                      <div className="lbl" style={{ marginBottom:7 }}>{t.rabatt}</div>
+                      <input type="number" min="0" max="100" className="inp num-inp" value={discount} onChange={e=>setDiscount(Number(e.target.value))} style={{ color:discount>0?'var(--cyan)':'var(--text)', textAlign:'left' }}/>
+                      <div style={{ fontSize:10, color:'var(--text3)', marginTop:5 }}>&nbsp;</div>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* Normal result */}
-              {result.preis!=null && (
-                <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:16 }}>
-                  {result.status==="extrapoliert" && (
-                    <div className="badge badge-warn" style={{ alignSelf:'flex-start' }}>
-                      <Icon name="alert-triangle" size={11}/> {t.extrapoliert}
-                    </div>
-                  )}
-
-                  {/* €/kWp hero */}
-                  <div>
-                    <div className="lbl" style={{ marginBottom:8 }}>{t.kostenProKwp}</div>
-                    <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
-                      <span style={{ fontFamily:'var(--mono)', fontSize:46, fontWeight:600, color:'var(--cyan)', lineHeight:1, letterSpacing:'-0.02em' }}>
-                        {fmt2(animPriceKwp)}
-                      </span>
-                      <span style={{ fontSize:14, color:'var(--text3)' }}>€ / kWp</span>
-                    </div>
-                  </div>
-
-                  <div style={{ height:1, background:'var(--border)' }}></div>
-
-                  {/* Per Module */}
-                  <div>
-                    <div className="lbl" style={{ marginBottom:8 }}>{t.kostenProModul} · {moduleCount} {t.moduleLabel}</div>
-                    <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
-                      <span style={{ fontFamily:'var(--mono)', fontSize:30, fontWeight:600, color:'var(--text)', lineHeight:1 }}>
-                        {fmt2(result.pricePerModule)}
-                      </span>
-                      <span style={{ fontSize:13, color:'var(--text3)' }}>€</span>
-                    </div>
-                  </div>
-
-                  <div style={{ height:1, background:'var(--border)' }}></div>
-
-                  {/* Total */}
-                  <div>
-                    <div className="lbl" style={{ marginBottom:8 }}>{t.gesamtkosten} · {fmt2(animKwp)} kWp</div>
-                    <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
-                      <span style={{ fontFamily:'var(--mono)', fontSize:30, fontWeight:600, color:'var(--text)', lineHeight:1 }}>
-                        {fmt2(animTotal)}
-                      </span>
-                      <span style={{ fontSize:13, color:'var(--text3)' }}>€</span>
-                    </div>
-                  </div>
-
-                  {/* Breakdown */}
-                  {(result.countryFactor!==1||result.discountFactor!==1) && (
-                    <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
-                      <div className="bk-row">
-                        <span style={{ color:'var(--text3)' }}>{t.modellpreis}</span>
-                        <span style={{ color:'var(--text2)' }}>€ {fmt2(result.basePricePerKwp)} /kWp</span>
-                      </div>
-                      {result.countryFactor!==1 && (
-                        <div className="bk-row">
-                          <span style={{ color:'var(--text3)' }}>{t.laenderfaktor} {country}</span>
-                          <span style={{ color:'var(--text2)' }}>× {result.countryFactor.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {result.discountFactor!==1 && (
-                        <div className="bk-row">
-                          <span style={{ color:'var(--text3)' }}>{t.rabattLine}</span>
-                          <span style={{ color:'var(--cyan)' }}>− {discount}%</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Disclaimer */}
-            <div style={{ padding:'14px 18px', borderRadius:'var(--rad-sm)', border:'1px solid var(--border)', background:'var(--surface)' }}>
-              <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text3)', marginBottom:5 }}>{t.disclaimerTitle}</div>
-              <p style={{ fontSize:11, color:'var(--text3)', lineHeight:1.6 }}>{t.disclaimerBody} {config.meta?.stand||"—"}.</p>
+            {/* ── RIGHT COL ── */}
+            <div className="right-col" style={{ flex:1, position:'sticky', top:64, paddingLeft:36, display:'flex', flexDirection:'column', gap:14 }}>
+
+              {/* Result card */}
+              <div className="card" style={{ borderTop:'2px solid var(--cyan)', borderRadius:'var(--rad)' }}>
+                <div style={{ padding:'24px' }}>
+
+                  {/* On-request / unknown state */}
+                  {(result.status==="anfrage"||result.status==="unbekannt") && (
+                    <div className="fade-up">
+                      <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', color:result.status==="anfrage"?'var(--amber)':'var(--err)', marginBottom:12 }}>
+                        {result.status==="anfrage" ? t.preisAufAnfrage : t.modellNichtVerfuegbar}
+                      </div>
+                      {(result.meta?.grund||result.meta?.reason) && (
+                        <p style={{ fontSize:12, color:'var(--text2)', fontFamily:'var(--mono)', marginBottom:6 }}>
+                          {result.meta?.grund||result.meta?.reason}
+                        </p>
+                      )}
+                      <p style={{ fontSize:12, color:'var(--text3)', fontStyle:'italic', marginBottom:20 }}>{t.bitteVertriebAnfragen}</p>
+                      <div style={{ borderTop:'1px solid var(--border)', paddingTop:16 }}>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.totalKwp}</div>
+                        <div style={{ fontFamily:'var(--mono)', fontSize:24, fontWeight:500, color:'var(--text2)', fontVariantNumeric:'tabular-nums' }}>
+                          {fmt2(result.totalKwp||0)} kWp
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Normal result */}
+                  {result.preis!=null && (
+                    <div className="fade-up" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+                      {result.status==="extrapoliert" && (
+                        <div className="badge badge-warn" style={{ alignSelf:'flex-start' }}>
+                          <Icon name="alert-triangle" size={10}/> {t.extrapoliert}
+                        </div>
+                      )}
+
+                      {/* Primary: €/kWp */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:9 }}>{t.kostenProKwp}</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:7 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:48, fontWeight:600, color:'var(--cyan)', lineHeight:1, letterSpacing:'-0.025em', fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(animPriceKwp)}
+                          </span>
+                          <span style={{ fontSize:13, color:'var(--text3)', fontFamily:'var(--mono)' }}>€/kWp</span>
+                        </div>
+                      </div>
+
+                      <div style={{ height:1, background:'var(--border)' }}/>
+
+                      {/* Per module */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.kostenProModul} · {moduleCount} {t.moduleLabel}</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:28, fontWeight:500, color:'var(--text)', lineHeight:1, fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(result.pricePerModule)}
+                          </span>
+                          <span style={{ fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)' }}>€</span>
+                        </div>
+                      </div>
+
+                      <div style={{ height:1, background:'var(--border)' }}/>
+
+                      {/* Total */}
+                      <div>
+                        <div className="lbl" style={{ marginBottom:7 }}>{t.gesamtkosten} · {fmt2(animKwp)} kWp</div>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+                          <span style={{ fontFamily:'var(--mono)', fontSize:28, fontWeight:500, color:'var(--text)', lineHeight:1, fontVariantNumeric:'tabular-nums' }}>
+                            {fmt2(animTotal)}
+                          </span>
+                          <span style={{ fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)' }}>€</span>
+                        </div>
+                      </div>
+
+                      {/* Breakdown */}
+                      {(result.countryFactor!==1||result.discountFactor!==1) && (
+                        <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
+                          <div className="bk-row">
+                            <span style={{ color:'var(--text3)' }}>{t.modellpreis}</span>
+                            <span style={{ color:'var(--text2)' }}>€ {fmt2(result.basePricePerKwp)}/kWp</span>
+                          </div>
+                          {result.countryFactor!==1 && (
+                            <div className="bk-row">
+                              <span style={{ color:'var(--text3)' }}>{t.laenderfaktor} {country}</span>
+                              <span style={{ color:'var(--text2)' }}>× {result.countryFactor.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {result.discountFactor!==1 && (
+                            <div className="bk-row">
+                              <span style={{ color:'var(--text3)' }}>{t.rabattLine}</span>
+                              <span style={{ color:'var(--cyan)' }}>−{discount}%</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Disclaimer */}
+              <div style={{ padding:'12px 14px', borderRadius:'var(--rad-sm)', border:'1px solid var(--border)' }}>
+                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text3)', marginBottom:4 }}>{t.disclaimerTitle}</div>
+                <p style={{ fontSize:11, color:'var(--text3)', lineHeight:1.55 }}>{t.disclaimerBody} {config.meta?.stand||"—"}.</p>
+              </div>
+
             </div>
           </div>
-        </main>
+        </div>
 
         {/* ── LOGIN BUTTON ── */}
         {!isAdmin && (
-          <button onClick={()=>{setShowLogin(true);setLoginError("");}} style={{ position:'fixed', bottom:24, right:24, zIndex:40, width:36, height:36, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--surface)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.35, transition:'opacity 0.2s' }}
-            onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.35'} title="Admin">
-            <Icon name="lock" size={14} style={{ color:'var(--text2)' }}/>
+          <button onClick={()=>{setShowLogin(true);setLoginError("");}}
+            style={{ position:'fixed', bottom:24, right:24, zIndex:40, width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--surface)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.3, transition:'opacity 0.2s' }}
+            onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0.3'} title="Admin">
+            <Icon name="lock" size={12} style={{ color:'var(--text2)' }}/>
           </button>
         )}
 
         {/* ── LOGIN MODAL ── */}
         {showLogin && !isAdmin && (
-          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', backdropFilter:'blur(12px)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }} onClick={()=>setShowLogin(false)}>
-            <form onSubmit={doLogin} onClick={e=>e.stopPropagation()} style={{ background:'#0D0F1A', border:'1px solid rgba(92,225,230,0.2)', borderRadius:14, padding:36, width:'100%', maxWidth:360, boxShadow:'0 0 60px rgba(92,225,230,0.1)' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:24, paddingBottom:20, borderBottom:'1px solid var(--border)' }}>
-                <div style={{ width:38, height:38, borderRadius:'50%', background:'var(--cyan-dim)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <Icon name="lock" size={16} style={{ color:'var(--cyan)' }}/>
-                </div>
-                <span style={{ fontSize:15, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em' }}>{t.adminLogin}</span>
+          <div style={{ position:'fixed', inset:0, background:'oklch(0% 0 0 / 0.8)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}
+            onClick={()=>setShowLogin(false)}>
+            <form onSubmit={doLogin} onClick={e=>e.stopPropagation()}
+              style={{ background:'var(--surface)', border:'1px solid var(--border2)', borderRadius:'var(--rad)', padding:32, width:'100%', maxWidth:340 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20, paddingBottom:16, borderBottom:'1px solid var(--border)' }}>
+                <Icon name="lock" size={14} style={{ color:'var(--text3)' }}/>
+                <span style={{ fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--text2)' }}>{t.adminLogin}</span>
               </div>
-              <div className="lbl" style={{ marginBottom:8 }}>{t.passwort}</div>
-              <input type="password" autoFocus value={loginPw} onChange={e=>setLoginPw(e.target.value)} className="inp" style={{ marginBottom:6 }}/>
-              {loginError && <p style={{ color:'#f87171', fontSize:12, marginBottom:8 }}>{loginError}</p>}
-              <div style={{ display:'flex', gap:10, marginTop:20 }}>
+              <div className="lbl" style={{ marginBottom:7 }}>{t.passwort}</div>
+              <input type="password" autoFocus value={loginPw} onChange={e=>setLoginPw(e.target.value)} className="inp" style={{ marginBottom:loginError?6:0 }}/>
+              {loginError && <p style={{ color:'var(--err)', fontSize:12, marginTop:6 }}>{loginError}</p>}
+              <div style={{ display:'flex', gap:8, marginTop:18 }}>
                 <button type="button" className="btn btn-ghost" style={{ flex:1 }} onClick={()=>{setShowLogin(false);setLoginPw("");setLoginError("");}}>{t.abbrechen}</button>
                 <button type="submit" className="btn btn-primary" style={{ flex:1 }}>{t.loginBtn}</button>
               </div>
-              <p style={{ fontSize:11, color:'var(--text3)', textAlign:'center', marginTop:14 }}>{t.sessionHinweis}</p>
+              <p style={{ fontSize:11, color:'var(--text3)', textAlign:'center', marginTop:12 }}>{t.sessionHinweis}</p>
             </form>
           </div>
         )}
+
       </div>
     );
   }
