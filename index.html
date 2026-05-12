@@ -369,7 +369,7 @@
       "Pitch|XWS|—|—": { kategorie:"Pitch",system:"XWS",ausrichtung:"—",klemmung:"—",type:"no_data",hinweis:"Daten noch nicht hinterlegt — immer Anfrage erforderlich"},
       "Metal|TL|—|—": { kategorie:"Metal",system:"TL",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:49.17,wind_coef:[-10.308374,49.101466,-26.629366,2.191305],snow_coef:[0.195501,1.824233,-4.077209,0.84454],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9983,snow_r_squared:0.9489,wind_max_error_eur:1.92,snow_max_error_eur:4.49,wind_polynomial_degree:3,snow_polynomial_degree:3},
       "Metal|TS|—|—": { kategorie:"Metal",system:"TS",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:38.11,wind_coef:[-2.767101,21.319018,-10.769345,0.792004],snow_coef:[1.429861,-6.471519,7.043649,-1.0719],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9863,snow_r_squared:0.902,wind_max_error_eur:3.13,snow_max_error_eur:3.01,wind_polynomial_degree:3,snow_polynomial_degree:3},
-      "Metal|TLE|—|—": { kategorie:"Metal",system:"TLE",ausrichtung:"—",klemmung:"—",type:"separable_2d",base:47.44,wind_coef:[-10.165374,48.473612,-25.775949,2.067684],snow_coef:[-2.090439,16.548957,-18.459163,2.915948],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_r_squared:0.9993,snow_r_squared:0.9544,wind_max_error_eur:1.17,snow_max_error_eur:9.42,wind_polynomial_degree:3,snow_polynomial_degree:3}
+      "Metal|TLE|—|—": { kategorie:"Metal",system:"TLE",ausrichtung:"—",klemmung:"—",type:"separable_2d_interp",base:48.64,wind_pts:[[0.1,0],[0.5,0],[1.0,14.1625],[1.2,23.5979],[1.4,34.2292],[1.6,42.1472],[1.8,53.4660],[2.0,63.2674]],snow_pts:[[0.1,0],[0.6,0],[1.0,0],[1.5,0],[2.0,16.5167],[2.5,34.7000],[3.0,34.7000],[3.2,34.7000],[3.4,57.4868],[3.6,57.4868],[3.8,57.4868],[4.0,57.4868]],wind_range:[0.1,2.0],snow_range:[0.1,4.0],wind_anfrage_threshold:null,snow_anfrage_threshold:null,wind_max_error_eur:0.0,snow_max_error_eur:0.0,n_data_points:19}
     },
     meta: { stand:"04/2026", modul:"TSM-NEG9R.25 450W FB", hinweis:"Listenpreise je kWp." }
   };
@@ -377,7 +377,7 @@
     GROUND: { label:"CompactGROUND (Freifläche)", systems:["GS Ground"] }
   };
   const FALLBACK_COUNTRY_FACTORS = { DE:1.00, AT:1.00, CH:1.00, OTHER:0.95 };
-  const LS_CONFIG="aerocompact-config-v7", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
+  const LS_CONFIG="aerocompact-config-v8", LS_FACTORS="aerocompact-factors-v4", LS_AUTH="aerocompact-admin-session", LS_LANG="aerocompact-lang";
 
   // ── I18N ───────────────────────────────────────────────────────
   const T = {
@@ -417,6 +417,19 @@
 
   // ── MATH ───────────────────────────────────────────────────────
   function evalPoly(coef, x) { let y=0; for(const c of coef) y=y*x+c; return y; }
+  function interp1D(pts, x) {
+    if(!pts || !pts.length) return 0;
+    const sorted=[...pts].sort((a,b)=>a[0]-b[0]);
+    if(x<=sorted[0][0]) return sorted[0][1];
+    if(x>=sorted[sorted.length-1][0]) return sorted[sorted.length-1][1];
+    for(let i=0;i<sorted.length-1;i++){
+      if(sorted[i][0]<=x && x<=sorted[i+1][0]){
+        const t=(x-sorted[i][0])/(sorted[i+1][0]-sorted[i][0]);
+        return sorted[i][1]+t*(sorted[i+1][1]-sorted[i][1]);
+      }
+    }
+    return sorted[sorted.length-1][1];
+  }
   function makeKey(kat, sys, aus, klem) {
     if(kat==="Pitch"||kat==="Metal") return `${kat}|${sys}|—|—`;
     return `Flat|${sys}|${aus}|${klem}`;
@@ -434,6 +447,7 @@
     if(m.type==="constant") preis=m.value;
     else if(m.type==="poly_wind") preis=evalPoly(m.wind_coef,wind);
     else if(m.type==="separable_2d") preis=m.base+evalPoly(m.wind_coef,wind)+evalPoly(m.snow_coef,schnee);
+    else if(m.type==="separable_2d_interp") preis=m.base+interp1D(m.wind_pts,wind)+interp1D(m.snow_pts,schnee);
     else return { preis:null, status:"unbekannt", meta:{ key } };
     let status="ok"; const ausserhalb=[];
     if(m.wind_range&&(wind<m.wind_range[0]||wind>m.wind_range[1])) ausserhalb.push(`${t?.windlast||"Wind"} ${wind.toFixed(1)} ∉ [${m.wind_range[0]}, ${m.wind_range[1]}]`);
